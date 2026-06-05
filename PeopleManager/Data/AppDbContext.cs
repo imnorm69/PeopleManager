@@ -1,0 +1,138 @@
+using Microsoft.EntityFrameworkCore;
+using PeopleManager.Models;
+
+namespace PeopleManager.Data;
+
+public class AppDbContext : DbContext
+{
+    public DbSet<Person>                   People                    { get; set; }
+    public DbSet<PersonEmploymentPeriod>   PersonEmploymentPeriods   { get; set; }
+    public DbSet<PersonJobTitle>           PersonJobTitles           { get; set; }
+    public DbSet<ProjectTeam>              ProjectTeams              { get; set; }
+    public DbSet<PersonProjectAssignment>  PersonProjectAssignments  { get; set; }
+    public DbSet<GlowGrow>                 GlowsGrows                { get; set; }
+    public DbSet<Meeting>                  Meetings                  { get; set; }
+    public DbSet<MeetingNote>              MeetingNotes              { get; set; }
+    public DbSet<ActionItem>               ActionItems               { get; set; }
+    public DbSet<ChecklistQuestion>        ChecklistQuestions        { get; set; }
+    public DbSet<PersonQuestionAssignment> PersonQuestionAssignments { get; set; }
+    public DbSet<ChecklistItemEvaluation>  ChecklistItemEvaluations  { get; set; }
+
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // ── Explicit PKs (property name doesn't match [TypeName]Id convention) ──
+        modelBuilder.Entity<PersonProjectAssignment>().HasKey(a => a.AssignmentId);
+        modelBuilder.Entity<PersonEmploymentPeriod>().HasKey(p => p.PeriodId);
+        modelBuilder.Entity<PersonQuestionAssignment>().HasKey(a => a.AssignmentId);
+        modelBuilder.Entity<ChecklistQuestion>().HasKey(q => q.QuestionId);
+        modelBuilder.Entity<ChecklistItemEvaluation>().HasKey(e => e.EvaluationId);
+
+        // ── nvarchar(max) columns ────────────────────────────────────────────────
+        modelBuilder.Entity<MeetingNote>()
+            .Property(n => n.NoteText).HasColumnType("nvarchar(max)");
+        modelBuilder.Entity<GlowGrow>()
+            .Property(g => g.Note).HasColumnType("nvarchar(max)");
+        modelBuilder.Entity<ActionItem>()
+            .Property(a => a.Description).HasColumnType("nvarchar(max)");
+        modelBuilder.Entity<ActionItem>()
+            .Property(a => a.CompletionNotes).HasColumnType("nvarchar(max)");
+        modelBuilder.Entity<PersonEmploymentPeriod>()
+            .Property(p => p.SeparationNotes).HasColumnType("nvarchar(max)");
+
+        // ── ActionItem — two Meeting FKs, no cascade to avoid cycles ────────────
+        modelBuilder.Entity<ActionItem>()
+            .HasOne(a => a.CreatedInMeeting)
+            .WithMany(m => m.CreatedActionItems)
+            .HasForeignKey(a => a.CreatedInMeetingId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ActionItem>()
+            .HasOne(a => a.CompletedInMeeting)
+            .WithMany()
+            .HasForeignKey(a => a.CompletedInMeetingId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ActionItem>()
+            .HasOne(a => a.Person)
+            .WithMany(p => p.ActionItems)
+            .HasForeignKey(a => a.PersonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ── Meeting → Person ─────────────────────────────────────────────────────
+        modelBuilder.Entity<Meeting>()
+            .HasOne(m => m.Person)
+            .WithMany(p => p.Meetings)
+            .HasForeignKey(m => m.PersonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ── PersonEmploymentPeriod → Person ──────────────────────────────────────
+        modelBuilder.Entity<PersonEmploymentPeriod>()
+            .HasOne(p => p.Person)
+            .WithMany(p => p.EmploymentPeriods)
+            .HasForeignKey(p => p.PersonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ── ChecklistItemEvaluation ───────────────────────────────────────────────
+        modelBuilder.Entity<ChecklistItemEvaluation>()
+            .HasOne(e => e.Person)
+            .WithMany(p => p.ChecklistEvaluations)
+            .HasForeignKey(e => e.PersonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ChecklistItemEvaluation>()
+            .HasOne(e => e.Question)
+            .WithMany(q => q.Evaluations)
+            .HasForeignKey(e => e.QuestionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ChecklistItemEvaluation>()
+            .HasOne(e => e.Meeting)
+            .WithMany()
+            .HasForeignKey(e => e.MeetingId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // ── PersonQuestionAssignment ─────────────────────────────────────────────
+        modelBuilder.Entity<PersonQuestionAssignment>()
+            .HasOne(a => a.Person)
+            .WithMany(p => p.QuestionAssignments)
+            .HasForeignKey(a => a.PersonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PersonQuestionAssignment>()
+            .HasOne(a => a.Question)
+            .WithMany(q => q.Assignments)
+            .HasForeignKey(a => a.QuestionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ── PersonProjectAssignment → Person ──────────────────────────────────────
+        modelBuilder.Entity<PersonProjectAssignment>()
+            .HasOne(a => a.Person)
+            .WithMany(p => p.ProjectAssignments)
+            .HasForeignKey(a => a.PersonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ── GlowGrow → Person ────────────────────────────────────────────────────
+        modelBuilder.Entity<GlowGrow>()
+            .HasOne(g => g.Person)
+            .WithMany(p => p.GlowsGrows)
+            .HasForeignKey(g => g.PersonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ── Indexes ──────────────────────────────────────────────────────────────
+        modelBuilder.Entity<PersonJobTitle>()
+            .HasIndex(j => new { j.PersonId, j.EffectiveDate });
+        modelBuilder.Entity<PersonProjectAssignment>()
+            .HasIndex(a => new { a.PersonId, a.RemovedDate });
+        modelBuilder.Entity<PersonEmploymentPeriod>()
+            .HasIndex(p => new { p.PersonId, p.SeparationDate });
+        modelBuilder.Entity<ActionItem>()
+            .HasIndex(a => new { a.PersonId, a.IsComplete });
+        modelBuilder.Entity<ChecklistItemEvaluation>()
+            .HasIndex(e => new { e.PersonId, e.QuestionId, e.EvaluatedDate });
+        modelBuilder.Entity<PersonQuestionAssignment>()
+            .HasIndex(a => new { a.PersonId, a.QuestionId })
+            .IsUnique();   // a person can only be assigned a given question once
+    }
+}
