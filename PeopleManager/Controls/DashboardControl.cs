@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PeopleManager.Data;
+using PeopleManager.Forms;
 using PeopleManager.Models;
 
 namespace PeopleManager.Controls;
@@ -86,6 +87,7 @@ public class DashboardControl : UserControl
         wrapper.Controls.Add(_grid);
 
         Controls.Add(wrapper);
+        Controls.Add(BuildActionToolbar());
         Controls.Add(header);
     }
 
@@ -119,6 +121,78 @@ public class DashboardControl : UserControl
             );
             _grid.Rows[^1].Tag = item.ActionItemId;
         }
+    }
+
+    private Panel BuildActionToolbar()
+    {
+        var toolbar = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = 40,
+            BackColor = Color.FromArgb(248, 249, 250),
+            Padding = new Padding(12, 6, 12, 6)
+        };
+        var flow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
+
+        var btnComplete = MakeToolbarButton("Mark Complete", Color.FromArgb(41, 128, 185));
+        btnComplete.Click += async (_, _) => await CompleteActionItemAsync();
+
+        var btnDelete = MakeToolbarButton("Delete", Color.FromArgb(192, 57, 43));
+        btnDelete.Click += async (_, _) => await DeleteActionItemAsync();
+
+        flow.Controls.AddRange(new Control[] { btnComplete, btnDelete });
+        toolbar.Controls.Add(flow);
+        return toolbar;
+    }
+
+    private static Button MakeToolbarButton(string text, Color back)
+    {
+        var btn = new Button
+        {
+            Text = text,
+            Height = 26,
+            AutoSize = true,
+            FlatStyle = FlatStyle.Flat,
+            BackColor = back,
+            ForeColor = Color.White,
+            Cursor = Cursors.Hand,
+            Margin = new Padding(0, 0, 6, 0),
+            Padding = new Padding(8, 0, 8, 0)
+        };
+        btn.FlatAppearance.BorderSize = 0;
+        return btn;
+    }
+
+    private async Task CompleteActionItemAsync()
+    {
+        if (_grid.CurrentRow?.Tag is not int id)
+        {
+            MessageBox.Show("Select an action item first.", "No Selection");
+            return;
+        }
+        using var form = new CompleteActionItemForm(id);
+        if (form.ShowDialog() == DialogResult.OK)
+            await LoadAsync();
+    }
+
+    private async Task DeleteActionItemAsync()
+    {
+        if (_grid.CurrentRow?.Tag is not int id)
+        {
+            MessageBox.Show("Select an action item first.", "No Selection");
+            return;
+        }
+        if (MessageBox.Show(
+                "Delete this action item?",
+                "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
+            != DialogResult.Yes) return;
+
+        await using var ctx = DbFactory.Create();
+        var item = await ctx.ActionItems.FindAsync(id);
+        if (item == null) return;
+        ctx.ActionItems.Remove(item);
+        await ctx.SaveChangesAsync();
+        await LoadAsync();
     }
 
     private static DataGridView BuildGrid()

@@ -92,6 +92,8 @@ public static class DbFactory
             END");
 
         // v2: DueDate column on ActionItems (default to CreatedDate + 14 days for existing rows)
+        // EXEC wrapper: SQL Server resolves column names at parse time for the whole batch,
+        // so the UPDATE must run as dynamic SQL after the ALTER TABLE ADD has executed.
         await ctx.Database.ExecuteSqlRawAsync(@"
             IF NOT EXISTS (
                 SELECT 1 FROM sys.columns
@@ -99,7 +101,7 @@ public static class DbFactory
             )
             BEGIN
                 ALTER TABLE ActionItems ADD DueDate DATETIME2(7) NULL;
-                UPDATE ActionItems SET DueDate = DATEADD(day, 14, CreatedDate);
+                EXEC(N'UPDATE ActionItems SET DueDate = DATEADD(day, 14, CreatedDate)');
                 ALTER TABLE ActionItems ALTER COLUMN DueDate DATETIME2(7) NOT NULL;
             END");
 

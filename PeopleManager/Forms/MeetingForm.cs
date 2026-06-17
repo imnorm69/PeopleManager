@@ -203,6 +203,36 @@ public class MeetingForm : Form
         btnAdd.FlatAppearance.BorderSize = 0;
         btnAdd.Click += async (_, _) => await AddActionItemAsync();
 
+        var btnComplete = new Button
+        {
+            Text = "Mark Complete",
+            Height = 26,
+            AutoSize = true,
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.FromArgb(41, 128, 185),
+            ForeColor = Color.White,
+            Cursor = Cursors.Hand,
+            Margin = new Padding(4, 0, 0, 0),
+            Padding = new Padding(8, 0, 8, 0)
+        };
+        btnComplete.FlatAppearance.BorderSize = 0;
+        btnComplete.Click += async (_, _) => await CompleteActionItemAsync();
+
+        var btnDelete = new Button
+        {
+            Text = "Delete",
+            Height = 26,
+            AutoSize = true,
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.FromArgb(192, 57, 43),
+            ForeColor = Color.White,
+            Cursor = Cursors.Hand,
+            Margin = new Padding(4, 0, 0, 0),
+            Padding = new Padding(8, 0, 8, 0)
+        };
+        btnDelete.FlatAppearance.BorderSize = 0;
+        btnDelete.Click += async (_, _) => await DeleteActionItemAsync();
+
         _cboAiFilter = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
@@ -221,7 +251,7 @@ public class MeetingForm : Form
             ForeColor = Color.FromArgb(100, 100, 100)
         };
 
-        flow.Controls.AddRange(new Control[] { btnAdd, _cboAiFilter, _lblAiCount });
+        flow.Controls.AddRange(new Control[] { btnAdd, btnComplete, btnDelete, _cboAiFilter, _lblAiCount });
         toolbar.Controls.Add(flow);
 
         _gridActionItems = BuildGrid(
@@ -429,6 +459,38 @@ public class MeetingForm : Form
         using var form = new AddActionItemForm(meetingId, _personId, _personDisplayName, _meetingDate);
         if (form.ShowDialog(this) == DialogResult.OK)
             await LoadActionItemsAsync();
+    }
+
+    private async Task CompleteActionItemAsync()
+    {
+        if (_gridActionItems.CurrentRow?.Tag is not int id)
+        {
+            MessageBox.Show("Select an action item first.", "No Selection");
+            return;
+        }
+        using var form = new CompleteActionItemForm(id, _meetingId);
+        if (form.ShowDialog(this) == DialogResult.OK)
+            await LoadActionItemsAsync();
+    }
+
+    private async Task DeleteActionItemAsync()
+    {
+        if (_gridActionItems.CurrentRow?.Tag is not int id)
+        {
+            MessageBox.Show("Select an action item first.", "No Selection");
+            return;
+        }
+        if (MessageBox.Show(
+                "Delete this action item?",
+                "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning)
+            != DialogResult.Yes) return;
+
+        await using var ctx = DbFactory.Create();
+        var item = await ctx.ActionItems.FindAsync(id);
+        if (item == null) return;
+        ctx.ActionItems.Remove(item);
+        await ctx.SaveChangesAsync();
+        await LoadActionItemsAsync();
     }
 
     private async Task SaveAsync()
