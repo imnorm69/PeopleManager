@@ -22,7 +22,7 @@ public class MeetingsControl : UserControl
         var header = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 60,
+            Height = 90,
             BackColor = Color.White,
             Padding = new Padding(16, 0, 16, 0)
         };
@@ -30,33 +30,33 @@ public class MeetingsControl : UserControl
         var lblTitle = new Label
         {
             Text = "1:1 Meetings",
-            Font = new Font("Segoe UI", 14f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 21f, FontStyle.Bold),
             ForeColor = Color.FromArgb(30, 58, 95),
             Dock = DockStyle.Left,
             AutoSize = false,
-            Width = 180,
+            Width = 270,
             TextAlign = ContentAlignment.MiddleLeft
         };
 
         var toolBar = new FlowLayoutPanel
         {
             Dock = DockStyle.Right,
-            Width = 500,
+            Width = 750,
             FlowDirection = FlowDirection.LeftToRight
         };
 
         _cboPerson = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Width = 200,
-            Margin = new Padding(0, 16, 8, 0)
+            Width = 300,
+            Margin = new Padding(0, 24, 12, 0)
         };
         _cboPerson.SelectedIndexChanged += async (_, _) => await LoadAsync();
 
         var btnNew  = MakeButton("+ New Meeting", Color.FromArgb(39, 174, 96));
         var btnOpen = MakeButton("Open",          Color.FromArgb(41, 128, 185));
 
-        btnOpen.Enabled = false;   // re-enabled once Open is rebuilt
+        btnOpen.Enabled = false;
         btnNew.Click += async (_, _) =>
         {
             using var dlg = new NewMeetingDialog();
@@ -124,14 +124,14 @@ public class MeetingsControl : UserControl
         var btn = new Button
         {
             Text = text,
-            Height = 28,
+            Height = 42,
             AutoSize = true,
             FlatStyle = FlatStyle.Flat,
             BackColor = back,
             ForeColor = Color.White,
             Cursor = Cursors.Default,
-            Margin = new Padding(4, 15, 0, 0),
-            Padding = new Padding(8, 0, 8, 0)
+            Margin = new Padding(6, 24, 0, 0),
+            Padding = new Padding(12, 0, 12, 0)
         };
         btn.FlatAppearance.BorderSize = 0;
         return btn;
@@ -143,11 +143,11 @@ public class MeetingsControl : UserControl
         dgv.EnableHeadersVisualStyles = false;
         dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(30, 58, 95);
         dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
-        dgv.ColumnHeadersHeight = 34;
-        dgv.RowTemplate.Height = 30;
+        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 14f, FontStyle.Bold);
+        dgv.ColumnHeadersHeight = 51;
+        dgv.RowTemplate.Height = 45;
         dgv.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(245, 248, 252);
-        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 9f);
+        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 14f);
         dgv.GridColor = Color.FromArgb(220, 230, 240);
         dgv.BorderStyle = BorderStyle.None;
         dgv.RowHeadersVisible = false;
@@ -158,10 +158,10 @@ public class MeetingsControl : UserControl
         dgv.AllowUserToDeleteRows = false;
         dgv.BackgroundColor = Color.White;
 
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Date",          Width = 100 });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Person",         Width = 180, AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Note Sections",  Width = 110 });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Open Items",     Width = 100 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Date",         Width = 150 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Person",        Width = 270, AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Note Sections", Width = 165 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Open Items",    Width = 150 });
         return dgv;
     }
 

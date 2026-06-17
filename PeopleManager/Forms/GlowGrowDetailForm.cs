@@ -12,16 +12,15 @@ public class GlowGrowDetailForm : Form
     private void BuildUI(GlowGrow item)
     {
         Text = item.Type == GlowGrowType.Glow ? "Glow Detail" : "Grow Detail";
-        Size = new Size(520, 380);
-        MinimumSize = new Size(420, 300);
+        Size = new Size(760, 570);
+        MinimumSize = new Size(620, 450);
         FormBorderStyle = FormBorderStyle.Sizable;
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.White;
 
-        // Coloured title banner
         var typeColor = item.Type == GlowGrowType.Glow
             ? Color.FromArgb(39, 174, 96)
             : Color.FromArgb(192, 57, 43);
@@ -29,20 +28,19 @@ public class GlowGrowDetailForm : Form
         var banner = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 36,
+            Height = 54,
             BackColor = typeColor
         };
         var lblType = new Label
         {
             Text = item.Type == GlowGrowType.Glow ? "GLOW" : "GROW",
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 16f, FontStyle.Bold),
             Dock = DockStyle.Fill,
             TextAlign = ContentAlignment.MiddleCenter
         };
         banner.Controls.Add(lblType);
 
-        // Detail fields
         var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
@@ -50,14 +48,14 @@ public class GlowGrowDetailForm : Form
             ColumnCount = 2,
             RowCount = 6
         };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 195));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 28)); // Person
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 28)); // Recorded
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 28)); // Source
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 28)); // Communicated
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42)); // Person
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42)); // Recorded
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42)); // Source
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42)); // Communicated
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); // Note
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40)); // Close button
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60)); // Close button
 
         AddReadOnlyRow(layout, "Person:",       item.Person?.FullName ?? "", 0);
         AddReadOnlyRow(layout, "Recorded:",     item.CreatedDate.ToLongDateString(), 1);
@@ -81,7 +79,7 @@ public class GlowGrowDetailForm : Form
             BackColor = Color.FromArgb(250, 250, 250),
             BorderStyle = BorderStyle.FixedSingle,
             ScrollBars = RichTextBoxScrollBars.Vertical,
-            Font = new Font("Segoe UI", 9.5f)
+            Font = new Font("Segoe UI", 14f)
         };
         layout.Controls.Add(rtb, 1, 4);
 
@@ -89,7 +87,7 @@ public class GlowGrowDetailForm : Form
         {
             Text = "Close",
             DialogResult = DialogResult.OK,
-            Width = 80,
+            Width = 120,
             Dock = DockStyle.Right
         };
         var btnRow = new Panel { Dock = DockStyle.Fill };
@@ -109,7 +107,7 @@ public class GlowGrowDetailForm : Form
             Text = label,
             TextAlign = ContentAlignment.MiddleRight,
             Dock = DockStyle.Fill,
-            Font = new Font("Segoe UI", 9f, FontStyle.Bold)
+            Font = new Font("Segoe UI", 14f, FontStyle.Bold)
         }, 0, row);
 
         layout.Controls.Add(new Label

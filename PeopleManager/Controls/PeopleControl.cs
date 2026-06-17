@@ -30,29 +30,28 @@ public class PeopleControl : UserControl
     {
         BackColor = Color.FromArgb(240, 242, 245);
 
-        // ── Header bar ───────────────────────────────────────────
         var header = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 60,
+            Height = 90,
             BackColor = Color.White,
             Padding = new Padding(16, 0, 16, 0)
         };
         var lblTitle = new Label
         {
             Text = "People",
-            Font = new Font("Segoe UI", 14f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 21f, FontStyle.Bold),
             ForeColor = Color.FromArgb(30, 58, 95),
             Dock = DockStyle.Left,
             AutoSize = false,
-            Width = 120,
+            Width = 180,
             TextAlign = ContentAlignment.MiddleLeft
         };
 
         var toolBar = new FlowLayoutPanel
         {
             Dock = DockStyle.Right,
-            Width = 600,
+            Width = 900,
             FlowDirection = FlowDirection.LeftToRight,
             AutoSize = false
         };
@@ -60,17 +59,16 @@ public class PeopleControl : UserControl
         _txtSearch = new TextBox
         {
             PlaceholderText = "Search by name…",
-            Width = 180,
-            Height = 26,
-            Margin = new Padding(0, 16, 6, 0)
+            Width = 270,
+            Margin = new Padding(0, 24, 9, 0)
         };
         _txtSearch.TextChanged += (_, _) => FilterGrid();
 
         _cboStatus = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Width = 120,
-            Margin = new Padding(0, 16, 8, 0)
+            Width = 180,
+            Margin = new Padding(0, 24, 12, 0)
         };
         _cboStatus.Items.AddRange(new object[] { "Active Only", "All", "Separated" });
         _cboStatus.SelectedIndex = 0;
@@ -88,7 +86,6 @@ public class PeopleControl : UserControl
         header.Controls.Add(toolBar);
         header.Controls.Add(lblTitle);
 
-        // ── Grid ─────────────────────────────────────────────────
         _grid = BuildGrid();
         _grid.CellDoubleClick += async (_, _) => await EditPersonAsync();
 
@@ -128,11 +125,9 @@ public class PeopleControl : UserControl
 
         var rows = _allRows.AsEnumerable();
 
-        // Status filter
         if (_cboStatus.SelectedIndex == 0)      rows = rows.Where(r => r.IsActive);
         else if (_cboStatus.SelectedIndex == 2)  rows = rows.Where(r => !r.IsActive);
 
-        // Name search
         if (!string.IsNullOrEmpty(search))
             rows = rows.Where(r =>
                 r.LastName.ToLower().Contains(search) ||
@@ -146,7 +141,7 @@ public class PeopleControl : UserControl
             if (!r.IsActive)
             {
                 _grid.Rows[^1].DefaultCellStyle.ForeColor = Color.FromArgb(160, 160, 160);
-                _grid.Rows[^1].DefaultCellStyle.Font = new Font("Segoe UI", 9f, FontStyle.Italic);
+                _grid.Rows[^1].DefaultCellStyle.Font = new Font("Segoe UI", 14f, FontStyle.Italic);
             }
         }
     }
@@ -194,14 +189,14 @@ public class PeopleControl : UserControl
         var btn = new Button
         {
             Text = text,
-            Height = 28,
+            Height = 42,
             AutoSize = true,
             FlatStyle = FlatStyle.Flat,
             BackColor = back,
             ForeColor = Color.White,
             Cursor = Cursors.Hand,
-            Margin = new Padding(4, 15, 0, 0),
-            Padding = new Padding(8, 0, 8, 0)
+            Margin = new Padding(6, 24, 0, 0),
+            Padding = new Padding(12, 0, 12, 0)
         };
         btn.FlatAppearance.BorderSize = 0;
         return btn;
@@ -213,11 +208,11 @@ public class PeopleControl : UserControl
         dgv.EnableHeadersVisualStyles = false;
         dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(30, 58, 95);
         dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
-        dgv.ColumnHeadersHeight = 34;
-        dgv.RowTemplate.Height = 30;
+        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 14f, FontStyle.Bold);
+        dgv.ColumnHeadersHeight = 51;
+        dgv.RowTemplate.Height = 45;
         dgv.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(245, 248, 252);
-        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 9f);
+        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 14f);
         dgv.GridColor = Color.FromArgb(220, 230, 240);
         dgv.BorderStyle = BorderStyle.None;
         dgv.RowHeadersVisible = false;
@@ -228,11 +223,11 @@ public class PeopleControl : UserControl
         dgv.AllowUserToDeleteRows = false;
         dgv.BackgroundColor = Color.White;
 
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Last Name",  Width = 150 });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "First Name", Width = 130 });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Start Date", Width = 100 });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Job Title",  Width = 200, AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Teams",      Width = 200 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Last Name",  Width = 225 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "First Name", Width = 195 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Start Date", Width = 150 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Job Title",  Width = 300, AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Teams",      Width = 300 });
         return dgv;
     }
 }

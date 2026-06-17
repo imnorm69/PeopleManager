@@ -21,7 +21,7 @@ public class TemplatesControl : UserControl
         var header = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 60,
+            Height = 90,
             BackColor = Color.White,
             Padding = new Padding(16, 0, 16, 0)
         };
@@ -29,18 +29,18 @@ public class TemplatesControl : UserControl
         var lblTitle = new Label
         {
             Text = "Checklist Questions",
-            Font = new Font("Segoe UI", 14f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 21f, FontStyle.Bold),
             ForeColor = Color.FromArgb(30, 58, 95),
             Dock = DockStyle.Left,
             AutoSize = false,
-            Width = 260,
+            Width = 390,
             TextAlign = ContentAlignment.MiddleLeft
         };
 
         var toolBar = new FlowLayoutPanel
         {
             Dock = DockStyle.Right,
-            Width = 420,
+            Width = 630,
             FlowDirection = FlowDirection.LeftToRight
         };
 
@@ -141,14 +141,14 @@ public class TemplatesControl : UserControl
         var btn = new Button
         {
             Text = text,
-            Height = 28,
+            Height = 42,
             AutoSize = true,
             FlatStyle = FlatStyle.Flat,
             BackColor = back,
             ForeColor = Color.White,
             Cursor = Cursors.Hand,
-            Margin = new Padding(4, 15, 0, 0),
-            Padding = new Padding(8, 0, 8, 0)
+            Margin = new Padding(6, 24, 0, 0),
+            Padding = new Padding(12, 0, 12, 0)
         };
         btn.FlatAppearance.BorderSize = 0;
         return btn;
@@ -160,10 +160,10 @@ public class TemplatesControl : UserControl
         dgv.EnableHeadersVisualStyles = false;
         dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(30, 58, 95);
         dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
-        dgv.ColumnHeadersHeight = 34;
-        dgv.RowTemplate.Height = 30;
-        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 9f);
+        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 14f, FontStyle.Bold);
+        dgv.ColumnHeadersHeight = 51;
+        dgv.RowTemplate.Height = 45;
+        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 14f);
         dgv.GridColor = Color.FromArgb(220, 230, 240);
         dgv.BorderStyle = BorderStyle.None;
         dgv.RowHeadersVisible = false;
@@ -174,9 +174,9 @@ public class TemplatesControl : UserControl
         dgv.AllowUserToDeleteRows = false;
         dgv.BackgroundColor = Color.White;
 
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Description", Width = 400, AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Value Type",  Width = 110 });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Assigned To", Width = 90  });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Description", Width = 600, AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Value Type",  Width = 165 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Assigned To", Width = 135 });
         return dgv;
     }
 }

@@ -9,7 +9,6 @@ public class AssignQuestionForm : Form
     private readonly int _questionId;
     private DataGridView _grid = null!;
 
-    // Row data: PersonId, PersonName, currently assigned?, current Frequency
     private record PersonRow(int PersonId, string Name, bool WasAssigned, int ExistingAssignmentId);
     private List<PersonRow> _rows = new();
 
@@ -23,24 +22,23 @@ public class AssignQuestionForm : Form
     private void BuildUI()
     {
         Text = "Assign Question to People";
-        Size = new Size(560, 440);
-        MinimumSize = new Size(460, 340);
+        Size = new Size(820, 660);
+        MinimumSize = new Size(680, 510);
         FormBorderStyle = FormBorderStyle.Sizable;
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.White;
 
         var infoLabel = new Label
         {
             Text = "Check each person to assign this question. Set the review frequency per person.",
             Dock = DockStyle.Top,
-            Height = 28,
-            Padding = new Padding(8, 6, 0, 0),
+            Height = 42,
+            Padding = new Padding(8, 9, 0, 0),
             ForeColor = Color.FromArgb(80, 80, 80),
-            Font = new Font("Segoe UI", 8.5f, FontStyle.Italic)
+            Font = new Font("Segoe UI", 13f, FontStyle.Italic)
         };
 
-        // Grid with checkbox + name + frequency columns
         _grid = new DataGridView
         {
             Dock = DockStyle.Fill,
@@ -53,17 +51,17 @@ public class AssignQuestionForm : Form
         _grid.EnableHeadersVisualStyles = false;
         _grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(30, 58, 95);
         _grid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-        _grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
-        _grid.ColumnHeadersHeight = 30;
-        _grid.RowTemplate.Height  = 28;
-        _grid.DefaultCellStyle.Font = new Font("Segoe UI", 9f);
+        _grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 14f, FontStyle.Bold);
+        _grid.ColumnHeadersHeight = 45;
+        _grid.RowTemplate.Height  = 42;
+        _grid.DefaultCellStyle.Font = new Font("Segoe UI", 14f);
         _grid.AllowUserToAddRows = false;
         _grid.AllowUserToDeleteRows = false;
 
         var colAssigned = new DataGridViewCheckBoxColumn
         {
             HeaderText = "Assign",
-            Width = 60,
+            Width = 90,
             Name = "Assigned",
             TrueValue = true,
             FalseValue = false
@@ -71,7 +69,7 @@ public class AssignQuestionForm : Form
         var colName = new DataGridViewTextBoxColumn
         {
             HeaderText = "Person",
-            Width = 200,
+            Width = 300,
             Name = "PersonName",
             ReadOnly = true,
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
@@ -79,23 +77,22 @@ public class AssignQuestionForm : Form
         var colFreq = new DataGridViewComboBoxColumn
         {
             HeaderText = "Frequency",
-            Width = 140,
+            Width = 210,
             Name = "Frequency",
             DataSource = Enum.GetValues<CheckFrequency>().Select(f => f.ToString()).ToArray(),
             DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox
         };
         _grid.Columns.AddRange(colAssigned, colName, colFreq);
 
-        // When a checkbox changes, enable/disable the frequency cell
         _grid.CellValueChanged += OnCellValueChanged;
         _grid.CurrentCellDirtyStateChanged += (_, _) =>
         {
             if (_grid.IsCurrentCellDirty) _grid.CommitEdit(DataGridViewDataErrorContexts.Commit);
         };
 
-        var btnPanel = new Panel { Dock = DockStyle.Bottom, Height = 46, BackColor = Color.White, Padding = new Padding(8, 8, 8, 8) };
-        var btnSave   = new Button { Text = "Save",   Width = 90, Height = 30, Dock = DockStyle.Right, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(41, 128, 185), ForeColor = Color.White, DialogResult = DialogResult.OK };
-        var btnCancel = new Button { Text = "Cancel", Width = 80, Height = 30, Dock = DockStyle.Right, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(127, 140, 141), ForeColor = Color.White, DialogResult = DialogResult.Cancel };
+        var btnPanel = new Panel { Dock = DockStyle.Bottom, Height = 70, BackColor = Color.White, Padding = new Padding(8, 12, 8, 12) };
+        var btnSave   = new Button { Text = "Save",   Width = 135, Height = 45, Dock = DockStyle.Right, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(41, 128, 185), ForeColor = Color.White, DialogResult = DialogResult.OK };
+        var btnCancel = new Button { Text = "Cancel", Width = 120, Height = 45, Dock = DockStyle.Right, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(127, 140, 141), ForeColor = Color.White, DialogResult = DialogResult.Cancel };
         btnSave.FlatAppearance.BorderSize = 0; btnCancel.FlatAppearance.BorderSize = 0;
         btnSave.Click += async (_, _) => await SaveAsync();
         btnPanel.Controls.Add(btnSave);
@@ -179,7 +176,7 @@ public class AssignQuestionForm : Form
             }
             else if (assign && existing != null)
             {
-                existing.Frequency = freq;   // update frequency if changed
+                existing.Frequency = freq;
             }
             else if (!assign && existing != null)
             {

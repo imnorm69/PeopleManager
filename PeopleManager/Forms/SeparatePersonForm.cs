@@ -24,13 +24,13 @@ public class SeparatePersonForm : Form
     private void BuildUI()
     {
         Text = "Separate Employee";
-        Size = new Size(460, 340);
-        MinimumSize = new Size(400, 300);
+        Size = new Size(680, 510);
+        MinimumSize = new Size(600, 450);
         FormBorderStyle = FormBorderStyle.Sizable;
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.White;
 
         var layout = new TableLayoutPanel
@@ -40,20 +40,19 @@ public class SeparatePersonForm : Form
             ColumnCount = 2,
             RowCount = 6
         };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 195));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));  // person label
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));  // sep date
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));  // reason
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));  // notes required hint
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 54));  // person label
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51));  // sep date
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51));  // reason
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));  // notes required hint
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));  // notes
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));  // buttons
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 63));  // buttons
 
-        // Person name (read-only display)
         var lblPerson = new Label
         {
             Text = _personName,
-            Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 16f, FontStyle.Bold),
             ForeColor = Color.FromArgb(30, 58, 95),
             Dock = DockStyle.Fill,
             TextAlign = ContentAlignment.MiddleLeft
@@ -61,7 +60,6 @@ public class SeparatePersonForm : Form
         layout.SetColumnSpan(lblPerson, 2);
         layout.Controls.Add(lblPerson, 0, 0);
 
-        // Separation date
         _dtpSeparation = new DateTimePicker
         {
             Dock = DockStyle.Fill,
@@ -71,7 +69,6 @@ public class SeparatePersonForm : Form
         layout.Controls.Add(MakeLabel("Separation Date *"), 0, 1);
         layout.Controls.Add(_dtpSeparation, 1, 1);
 
-        // Reason
         _cboReason = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill };
         _cboReason.Items.AddRange(new object[]
         {
@@ -85,28 +82,25 @@ public class SeparatePersonForm : Form
         layout.Controls.Add(MakeLabel("Reason *"), 0, 2);
         layout.Controls.Add(_cboReason, 1, 2);
 
-        // Notes hint
         _lblNotesRequired = new Label
         {
             Text = "",
             ForeColor = Color.FromArgb(192, 57, 43),
-            Font = new Font("Segoe UI", 8f, FontStyle.Italic),
+            Font = new Font("Segoe UI", 12f, FontStyle.Italic),
             Dock = DockStyle.Fill
         };
         layout.SetColumnSpan(_lblNotesRequired, 2);
         layout.Controls.Add(_lblNotesRequired, 0, 3);
 
-        // Notes
         _rtbNotes = new RichTextBox
         {
             Dock = DockStyle.Fill,
             ScrollBars = RichTextBoxScrollBars.Vertical,
-            Font = new Font("Segoe UI", 9f)
+            Font = new Font("Segoe UI", 14f)
         };
         layout.Controls.Add(MakeLabel("Notes", top: true), 0, 4);
         layout.Controls.Add(_rtbNotes, 1, 4);
 
-        // Buttons
         var btnPanel = new FlowLayoutPanel
         {
             FlowDirection = FlowDirection.RightToLeft,
@@ -118,7 +112,7 @@ public class SeparatePersonForm : Form
         _btnSeparate = new Button
         {
             Text = "Separate",
-            Width = 90,
+            Width = 135,
             DialogResult = DialogResult.OK,
             BackColor = Color.FromArgb(192, 57, 43),
             ForeColor = Color.White,
@@ -127,7 +121,7 @@ public class SeparatePersonForm : Form
         _btnSeparate.FlatAppearance.BorderSize = 0;
         _btnSeparate.Click += async (_, _) => await SaveAsync();
 
-        var btnCancel = new Button { Text = "Cancel", Width = 80, DialogResult = DialogResult.Cancel };
+        var btnCancel = new Button { Text = "Cancel", Width = 120, DialogResult = DialogResult.Cancel };
 
         btnPanel.Controls.AddRange(new Control[] { btnCancel, _btnSeparate });
         layout.Controls.Add(btnPanel, 0, 5);
@@ -158,7 +152,6 @@ public class SeparatePersonForm : Form
 
         await using var ctx = DbFactory.Create();
 
-        // Close the active employment period
         var activePeriod = ctx.PersonEmploymentPeriods
             .Where(p => p.PersonId == _personId && p.SeparationDate == null)
             .OrderByDescending(p => p.HireDate)
@@ -166,14 +159,13 @@ public class SeparatePersonForm : Form
 
         if (activePeriod != null)
         {
-            activePeriod.SeparationDate  = _dtpSeparation.Value.Date;
+            activePeriod.SeparationDate   = _dtpSeparation.Value.Date;
             activePeriod.SeparationReason = reason;
-            activePeriod.SeparationNotes = string.IsNullOrWhiteSpace(_rtbNotes.Text)
+            activePeriod.SeparationNotes  = string.IsNullOrWhiteSpace(_rtbNotes.Text)
                 ? null : _rtbNotes.Text.Trim();
         }
         else
         {
-            // No period record yet (person predates the feature) — create one retroactively
             var person = await ctx.People.FindAsync(_personId);
             ctx.PersonEmploymentPeriods.Add(new PersonEmploymentPeriod
             {
@@ -186,7 +178,6 @@ public class SeparatePersonForm : Form
             });
         }
 
-        // Mark person inactive
         var personRecord = await ctx.People.FindAsync(_personId);
         personRecord!.IsActive = false;
         await ctx.SaveChangesAsync();

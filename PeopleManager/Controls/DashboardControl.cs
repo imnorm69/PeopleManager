@@ -23,25 +23,25 @@ public class DashboardControl : UserControl
         var header = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 60,
+            Height = 90,
             BackColor = Color.White,
             Padding = new Padding(16, 0, 16, 0)
         };
         var lblTitle = new Label
         {
             Text = "Dashboard — Open Action Items",
-            Font = new Font("Segoe UI", 14f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 21f, FontStyle.Bold),
             ForeColor = Color.FromArgb(30, 58, 95),
             Dock = DockStyle.Left,
             AutoSize = false,
-            Width = 400,
+            Width = 600,
             TextAlign = ContentAlignment.MiddleLeft
         };
 
         var filterPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Right,
-            Width = 320,
+            Width = 480,
             FlowDirection = FlowDirection.LeftToRight,
             AutoSize = false
         };
@@ -49,15 +49,15 @@ public class DashboardControl : UserControl
         {
             Text = "Show:",
             TextAlign = ContentAlignment.MiddleRight,
-            Width = 45,
-            Height = 26,
-            Margin = new Padding(0, 17, 4, 0)
+            Width = 60,
+            Height = 40,
+            Margin = new Padding(0, 25, 6, 0)
         });
         _cboAssignee = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Width = 130,
-            Margin = new Padding(0, 16, 8, 0)
+            Width = 195,
+            Margin = new Padding(0, 24, 12, 0)
         };
         _cboAssignee.Items.AddRange(new object[] { "All Open", "Assigned to Me", "Assigned to Person" });
         _cboAssignee.SelectedIndex = 0;
@@ -65,9 +65,9 @@ public class DashboardControl : UserControl
         var btnRefresh = new Button
         {
             Text = "Refresh",
-            Width = 80,
-            Height = 28,
-            Margin = new Padding(0, 15, 0, 0),
+            Width = 120,
+            Height = 42,
+            Margin = new Padding(0, 24, 0, 0),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(41, 128, 185),
             ForeColor = Color.White,
@@ -105,7 +105,7 @@ public class DashboardControl : UserControl
             query = query.Where(a => a.AssignedTo == ActionItemAssignee.Person);
 
         var items = await query
-            .OrderBy(a => a.AssignedTo)   // Me (0) before Person (1)
+            .OrderBy(a => a.AssignedTo)
             .ThenBy(a => a.CreatedDate)
             .ToListAsync();
 
@@ -128,9 +128,9 @@ public class DashboardControl : UserControl
         var toolbar = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 40,
+            Height = 54,
             BackColor = Color.FromArgb(248, 249, 250),
-            Padding = new Padding(12, 6, 12, 6)
+            Padding = new Padding(16, 6, 16, 6)
         };
         var flow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
 
@@ -150,14 +150,14 @@ public class DashboardControl : UserControl
         var btn = new Button
         {
             Text = text,
-            Height = 26,
+            Height = 40,
             AutoSize = true,
             FlatStyle = FlatStyle.Flat,
             BackColor = back,
             ForeColor = Color.White,
             Cursor = Cursors.Hand,
-            Margin = new Padding(0, 0, 6, 0),
-            Padding = new Padding(8, 0, 8, 0)
+            Margin = new Padding(0, 0, 8, 0),
+            Padding = new Padding(12, 0, 12, 0)
         };
         btn.FlatAppearance.BorderSize = 0;
         return btn;
@@ -201,11 +201,11 @@ public class DashboardControl : UserControl
         dgv.EnableHeadersVisualStyles = false;
         dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(30, 58, 95);
         dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
-        dgv.ColumnHeadersHeight = 34;
-        dgv.RowTemplate.Height = 30;
+        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 14f, FontStyle.Bold);
+        dgv.ColumnHeadersHeight = 51;
+        dgv.RowTemplate.Height = 45;
         dgv.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(245, 248, 252);
-        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 9f);
+        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 14f);
         dgv.GridColor = Color.FromArgb(220, 230, 240);
         dgv.BorderStyle = BorderStyle.None;
         dgv.RowHeadersVisible = false;
@@ -216,11 +216,11 @@ public class DashboardControl : UserControl
         dgv.AllowUserToDeleteRows = false;
         dgv.BackgroundColor = Color.White;
 
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Person",       Width = 160, Name = "Person" });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Description",  Width = 340, Name = "Description", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Assigned To",  Width = 100, Name = "AssignedTo" });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Created",      Width = 90,  Name = "Created" });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Meeting Date", Width = 100, Name = "MeetingDate" });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Person",       Width = 240, Name = "Person" });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Description",  Width = 510, Name = "Description", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Assigned To",  Width = 150, Name = "AssignedTo" });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Created",      Width = 135, Name = "Created" });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Meeting Date", Width = 150, Name = "MeetingDate" });
 
         return dgv;
     }

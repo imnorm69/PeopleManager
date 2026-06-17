@@ -6,7 +6,6 @@ namespace PeopleManager.Forms;
 
 public class MeetingForm : Form
 {
-    // Shared overdue styling — same values used by checklist section later
     internal static readonly Color OverdueBg = Color.FromArgb(255, 235, 235);
     internal static readonly Color OverdueFg = Color.FromArgb(180, 0, 0);
 
@@ -15,13 +14,11 @@ public class MeetingForm : Form
     private int?              _meetingId;
 
     private string _personDisplayName = "";
-    private string _personFullName    = "";   // "First Last" — used for @-mention search
+    private string _personFullName    = "";
 
-    // Header labels populated in LoadAsync
     private Label _lblName = null!;
     private Label _lblDate = null!;
 
-    // Right panel — Glows / Grows
     private Label          _lblGlowsHeader = null!;
     private Label          _lblGrowsHeader  = null!;
     private CheckedListBox _clbGlows        = null!;
@@ -29,38 +26,32 @@ public class MeetingForm : Form
     private readonly List<GlowGrow> _glows = new();
     private readonly List<GlowGrow> _grows = new();
 
-    // Bottom panel — Action Items tab
     private DataGridView _gridActionItems = null!;
     private ComboBox     _cboAiFilter     = null!;
     private Label        _lblAiCount      = null!;
 
-    // Bottom panel — Mentions tab
     private DataGridView _gridMentions = null!;
 
     public MeetingForm(int personId, DateTime meetingDate, int? existingMeetingId = null)
     {
-        _personId  = personId;
+        _personId    = personId;
         _meetingDate = meetingDate;
-        _meetingId = existingMeetingId;
+        _meetingId   = existingMeetingId;
         BuildUI();
         _ = LoadAsync();
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    //  UI Construction
-    // ═══════════════════════════════════════════════════════════════
-
     private void BuildUI()
     {
         Text = "1:1 Meeting";
-        Size = new Size(1060, 720);
-        MinimumSize = new Size(820, 560);
+        Size = new Size(1580, 1080);
+        MinimumSize = new Size(1100, 740);
         FormBorderStyle = FormBorderStyle.Sizable;
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.FromArgb(245, 247, 250);
 
-        Controls.Add(BuildContentPlaceholder());  // DockStyle.Fill — must be added first
+        Controls.Add(BuildContentPlaceholder());
         Controls.Add(BuildBottomSeparator());
         Controls.Add(BuildBottomPanel());
         Controls.Add(BuildRightSeparator());
@@ -74,7 +65,7 @@ public class MeetingForm : Form
         var pnl = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 52,
+            Height = 78,
             BackColor = Color.FromArgb(30, 58, 95),
             Padding = new Padding(16, 0, 16, 0)
         };
@@ -82,20 +73,20 @@ public class MeetingForm : Form
         {
             Text = "Loading…",
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 14f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 21f, FontStyle.Bold),
             Dock = DockStyle.Left,
             AutoSize = false,
-            Width = 480,
+            Width = 720,
             TextAlign = ContentAlignment.MiddleLeft
         };
         _lblDate = new Label
         {
             Text = _meetingDate.ToString("MMMM d, yyyy"),
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 14f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 21f, FontStyle.Bold),
             Dock = DockStyle.Right,
             AutoSize = false,
-            Width = 220,
+            Width = 330,
             TextAlign = ContentAlignment.MiddleRight
         };
         pnl.Controls.Add(_lblDate);
@@ -108,9 +99,9 @@ public class MeetingForm : Form
         var pnl = new Panel
         {
             Dock = DockStyle.Bottom,
-            Height = 48,
+            Height = 72,
             BackColor = Color.White,
-            Padding = new Padding(12, 8, 12, 8)
+            Padding = new Padding(12, 12, 12, 12)
         };
         var btnSave = MakeFooterButton("Save Meeting", Color.FromArgb(41, 128, 185));
         btnSave.Click += async (_, _) => await SaveAsync();
@@ -129,7 +120,7 @@ public class MeetingForm : Form
         var pnl = new Panel
         {
             Dock = DockStyle.Right,
-            Width = 295,
+            Width = 440,
             BackColor = Color.White,
             Padding = new Padding(6)
         };
@@ -140,9 +131,9 @@ public class MeetingForm : Form
             RowCount = 4
         };
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 39));
         tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 39));
         tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
 
         _lblGlowsHeader = MakeSectionLabel("Glows", Color.FromArgb(39, 174, 96));
@@ -166,9 +157,9 @@ public class MeetingForm : Form
 
     private Panel BuildBottomPanel()
     {
-        var pnl = new Panel { Dock = DockStyle.Bottom, Height = 215, BackColor = Color.White };
+        var pnl = new Panel { Dock = DockStyle.Bottom, Height = 320, BackColor = Color.White };
 
-        var tabs = new TabControl { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 9f) };
+        var tabs = new TabControl { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 14f) };
         tabs.TabPages.Add(BuildActionItemsTab());
         tabs.TabPages.Add(BuildMentionsTab());
         pnl.Controls.Add(tabs);
@@ -179,26 +170,25 @@ public class MeetingForm : Form
     {
         var page = new TabPage("Action Items");
 
-        // Toolbar
         var toolbar = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 36,
+            Height = 54,
             BackColor = Color.FromArgb(248, 249, 250),
-            Padding = new Padding(6, 4, 6, 4)
+            Padding = new Padding(6, 6, 6, 6)
         };
         var flow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
 
         var btnAdd = new Button
         {
             Text = "+ Add Action Item",
-            Height = 26,
+            Height = 40,
             AutoSize = true,
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(39, 174, 96),
             ForeColor = Color.White,
             Cursor = Cursors.Hand,
-            Padding = new Padding(8, 0, 8, 0)
+            Padding = new Padding(12, 0, 12, 0)
         };
         btnAdd.FlatAppearance.BorderSize = 0;
         btnAdd.Click += async (_, _) => await AddActionItemAsync();
@@ -206,14 +196,14 @@ public class MeetingForm : Form
         var btnComplete = new Button
         {
             Text = "Mark Complete",
-            Height = 26,
+            Height = 40,
             AutoSize = true,
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(41, 128, 185),
             ForeColor = Color.White,
             Cursor = Cursors.Hand,
-            Margin = new Padding(4, 0, 0, 0),
-            Padding = new Padding(8, 0, 8, 0)
+            Margin = new Padding(6, 0, 0, 0),
+            Padding = new Padding(12, 0, 12, 0)
         };
         btnComplete.FlatAppearance.BorderSize = 0;
         btnComplete.Click += async (_, _) => await CompleteActionItemAsync();
@@ -221,14 +211,14 @@ public class MeetingForm : Form
         var btnDelete = new Button
         {
             Text = "Delete",
-            Height = 26,
+            Height = 40,
             AutoSize = true,
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(192, 57, 43),
             ForeColor = Color.White,
             Cursor = Cursors.Hand,
-            Margin = new Padding(4, 0, 0, 0),
-            Padding = new Padding(8, 0, 8, 0)
+            Margin = new Padding(6, 0, 0, 0),
+            Padding = new Padding(12, 0, 12, 0)
         };
         btnDelete.FlatAppearance.BorderSize = 0;
         btnDelete.Click += async (_, _) => await DeleteActionItemAsync();
@@ -236,8 +226,8 @@ public class MeetingForm : Form
         _cboAiFilter = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Width = 100,
-            Margin = new Padding(8, 1, 0, 0)
+            Width = 150,
+            Margin = new Padding(12, 1, 0, 0)
         };
         _cboAiFilter.Items.AddRange(new object[] { "Open Only", "All" });
         _cboAiFilter.SelectedIndex = 0;
@@ -247,7 +237,7 @@ public class MeetingForm : Form
         {
             AutoSize = true,
             TextAlign = ContentAlignment.MiddleLeft,
-            Margin = new Padding(8, 4, 0, 0),
+            Margin = new Padding(12, 6, 0, 0),
             ForeColor = Color.FromArgb(100, 100, 100)
         };
 
@@ -255,10 +245,10 @@ public class MeetingForm : Form
         toolbar.Controls.Add(flow);
 
         _gridActionItems = BuildGrid(
-            ("Added",       80),
-            ("Assigned To", 95),
-            ("Description", 0),   // 0 = Fill
-            ("Due Date",    90));
+            ("Added",       120),
+            ("Assigned To", 140),
+            ("Description", 0),
+            ("Due Date",    135));
         _gridActionItems.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
         page.Controls.Add(_gridActionItems);
@@ -274,17 +264,17 @@ public class MeetingForm : Form
         {
             Text = "Open action items from other meetings that tag this person with @",
             Dock = DockStyle.Top,
-            Height = 24,
+            Height = 36,
             ForeColor = Color.FromArgb(100, 100, 100),
-            Font = new Font("Segoe UI", 8.5f, FontStyle.Italic),
+            Font = new Font("Segoe UI", 13f, FontStyle.Italic),
             TextAlign = ContentAlignment.MiddleLeft,
             Padding = new Padding(6, 0, 0, 0)
         };
 
         _gridMentions = BuildGrid(
-            ("Their Meeting Person", 160),
-            ("Description",         0),    // Fill
-            ("Due Date",            90));
+            ("Their Meeting Person", 240),
+            ("Description",         0),
+            ("Due Date",            135));
         _gridMentions.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
         page.Controls.Add(_gridMentions);
@@ -304,16 +294,12 @@ public class MeetingForm : Form
         {
             Text = "Notes · Checklist\n(coming in the next iteration)",
             ForeColor = Color.FromArgb(160, 170, 180),
-            Font = new Font("Segoe UI", 11f, FontStyle.Italic),
+            Font = new Font("Segoe UI", 16f, FontStyle.Italic),
             Dock = DockStyle.Fill,
             TextAlign = ContentAlignment.MiddleCenter
         });
         return pnl;
     }
-
-    // ═══════════════════════════════════════════════════════════════
-    //  Data Loading
-    // ═══════════════════════════════════════════════════════════════
 
     private async Task LoadAsync()
     {
@@ -370,7 +356,7 @@ public class MeetingForm : Form
             query = query.Where(a => !a.IsComplete);
 
         var items = await query
-            .OrderBy(a => a.AssignedTo)   // Manager (0) first
+            .OrderBy(a => a.AssignedTo)
             .ThenBy(a => a.DueDate)
             .ToListAsync();
 
@@ -448,10 +434,6 @@ public class MeetingForm : Form
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    //  Actions
-    // ═══════════════════════════════════════════════════════════════
-
     private async Task AddActionItemAsync()
     {
         var meetingId = await EnsureMeetingSavedAsync();
@@ -499,7 +481,6 @@ public class MeetingForm : Form
 
         await using var ctx = DbFactory.Create();
 
-        // Mark checked glows/grows as communicated
         var checkedIds = new List<int>();
         foreach (int i in _clbGlows.CheckedIndices) checkedIds.Add(_glows[i].GlowGrowId);
         foreach (int i in _clbGrows.CheckedIndices)  checkedIds.Add(_grows[i].GlowGrowId);
@@ -538,20 +519,16 @@ public class MeetingForm : Form
         form.ShowDialog(this);
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    //  Helpers
-    // ═══════════════════════════════════════════════════════════════
-
     private static DataGridView BuildGrid(params (string Header, int Width)[] columns)
     {
         var dgv = new DataGridView { Dock = DockStyle.Fill };
         dgv.EnableHeadersVisualStyles = false;
         dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(52, 73, 94);
         dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 8.5f, FontStyle.Bold);
-        dgv.ColumnHeadersHeight = 26;
-        dgv.RowTemplate.Height  = 24;
-        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 8.5f);
+        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 13f, FontStyle.Bold);
+        dgv.ColumnHeadersHeight = 39;
+        dgv.RowTemplate.Height  = 36;
+        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 13f);
         dgv.GridColor = Color.FromArgb(220, 230, 240);
         dgv.BorderStyle = BorderStyle.None;
         dgv.RowHeadersVisible = false;
@@ -574,7 +551,7 @@ public class MeetingForm : Form
     private static Label MakeSectionLabel(string text, Color color) => new()
     {
         Text = text,
-        Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+        Font = new Font("Segoe UI", 14f, FontStyle.Bold),
         ForeColor = color,
         Dock = DockStyle.Fill,
         TextAlign = ContentAlignment.BottomLeft,
@@ -586,7 +563,7 @@ public class MeetingForm : Form
         Dock = DockStyle.Fill,
         BorderStyle = BorderStyle.FixedSingle,
         CheckOnClick = true,
-        Font = new Font("Segoe UI", 9f)
+        Font = new Font("Segoe UI", 14f)
     };
 
     private static Button MakeFooterButton(string text, Color back)
@@ -594,8 +571,8 @@ public class MeetingForm : Form
         var btn = new Button
         {
             Text = text,
-            Width = 120,
-            Height = 32,
+            Width = 180,
+            Height = 48,
             Dock = DockStyle.Right,
             FlatStyle = FlatStyle.Flat,
             BackColor = back,

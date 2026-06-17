@@ -21,12 +21,12 @@ public class ReHirePersonForm : Form
     private void BuildUI()
     {
         Text = "Re-hire Employee";
-        Size = new Size(420, 220);
+        Size = new Size(620, 330);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.White;
 
         var layout = new TableLayoutPanel
@@ -36,14 +36,13 @@ public class ReHirePersonForm : Form
             ColumnCount = 2,
             RowCount = 4
         };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-        // Person name
         var lblPerson = new Label
         {
             Text = _personName,
-            Font = new Font("Segoe UI", 11f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 16f, FontStyle.Bold),
             ForeColor = Color.FromArgb(30, 58, 95),
             Dock = DockStyle.Fill,
             TextAlign = ContentAlignment.MiddleLeft
@@ -51,7 +50,6 @@ public class ReHirePersonForm : Form
         layout.SetColumnSpan(lblPerson, 2);
         layout.Controls.Add(lblPerson, 0, 0);
 
-        // Hire date
         _dtpHireDate = new DateTimePicker
         {
             Dock = DockStyle.Fill,
@@ -61,12 +59,10 @@ public class ReHirePersonForm : Form
         layout.Controls.Add(MakeLabel("New Start Date *"), 0, 1);
         layout.Controls.Add(_dtpHireDate, 1, 1);
 
-        // Job title
         _txtJobTitle = new TextBox { Dock = DockStyle.Fill };
         layout.Controls.Add(MakeLabel("Job Title *"), 0, 2);
         layout.Controls.Add(_txtJobTitle, 1, 2);
 
-        // Buttons
         var btnPanel = new FlowLayoutPanel
         {
             FlowDirection = FlowDirection.RightToLeft,
@@ -78,7 +74,7 @@ public class ReHirePersonForm : Form
         var btnReHire = new Button
         {
             Text = "Re-hire",
-            Width = 80,
+            Width = 120,
             DialogResult = DialogResult.OK,
             BackColor = Color.FromArgb(39, 174, 96),
             ForeColor = Color.White,
@@ -87,7 +83,7 @@ public class ReHirePersonForm : Form
         btnReHire.FlatAppearance.BorderSize = 0;
         btnReHire.Click += async (_, _) => await SaveAsync();
 
-        var btnCancel = new Button { Text = "Cancel", Width = 80, DialogResult = DialogResult.Cancel };
+        var btnCancel = new Button { Text = "Cancel", Width = 120, DialogResult = DialogResult.Cancel };
         btnPanel.Controls.AddRange(new Control[] { btnCancel, btnReHire });
         layout.Controls.Add(btnPanel, 0, 3);
 
@@ -108,14 +104,12 @@ public class ReHirePersonForm : Form
 
         await using var ctx = DbFactory.Create();
 
-        // New employment period
         ctx.PersonEmploymentPeriods.Add(new PersonEmploymentPeriod
         {
             PersonId = _personId,
             HireDate = _dtpHireDate.Value.Date
         });
 
-        // New job title effective on hire date
         ctx.PersonJobTitles.Add(new PersonJobTitle
         {
             PersonId      = _personId,
@@ -123,7 +117,6 @@ public class ReHirePersonForm : Form
             EffectiveDate = _dtpHireDate.Value.Date
         });
 
-        // Mark person active again
         var person = await ctx.People.FindAsync(_personId);
         person!.IsActive = true;
 

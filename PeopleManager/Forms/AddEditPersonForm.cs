@@ -9,7 +9,7 @@ public class AddEditPersonForm : Form
     private TextBox _txtFirst = null!;
     private TextBox _txtLast = null!;
     private DateTimePicker _dtpStart = null!;
-    private TextBox _txtTitle = null!;   // only shown for new person
+    private TextBox _txtTitle = null!;
 
     public AddEditPersonForm(int? personId)
     {
@@ -21,12 +21,12 @@ public class AddEditPersonForm : Form
     private void BuildUI()
     {
         Text = _personId.HasValue ? "Edit Person" : "Add New Person";
-        Size = new Size(420, _personId.HasValue ? 260 : 310);
+        Size = new Size(620, _personId.HasValue ? 390 : 460);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.White;
 
         var layout = new TableLayoutPanel
@@ -36,7 +36,7 @@ public class AddEditPersonForm : Form
             ColumnCount = 2,
             RowCount = _personId.HasValue ? 5 : 6
         };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
         int row = 0;
@@ -51,7 +51,6 @@ public class AddEditPersonForm : Form
             _txtTitle = AddRow(layout, "Job Title *", row++);
         }
 
-        // Buttons
         var btnPanel = new FlowLayoutPanel
         {
             FlowDirection = FlowDirection.RightToLeft,
@@ -60,8 +59,8 @@ public class AddEditPersonForm : Form
         };
         layout.SetColumnSpan(btnPanel, 2);
 
-        var btnSave = new Button { Text = "Save", DialogResult = DialogResult.OK, Width = 80 };
-        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 80 };
+        var btnSave   = new Button { Text = "Save",   DialogResult = DialogResult.OK,     Width = 120 };
+        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 120 };
         btnSave.Click += async (_, _) => await SaveAsync();
         btnPanel.Controls.AddRange(new Control[] { btnCancel, btnSave });
         layout.Controls.Add(btnPanel, 0, row);
@@ -87,8 +86,8 @@ public class AddEditPersonForm : Form
         await using var ctx = DbFactory.Create();
         var p = await ctx.People.FindAsync(id);
         if (p == null) return;
-        _txtFirst.Text = p.FirstName;
-        _txtLast.Text  = p.LastName;
+        _txtFirst.Text  = p.FirstName;
+        _txtLast.Text   = p.LastName;
         _dtpStart.Value = p.StartDate;
     }
 
@@ -132,7 +131,7 @@ public class AddEditPersonForm : Form
             });
             p.JobTitles.Add(new PersonJobTitle
             {
-                Title = _txtTitle.Text.Trim(),
+                Title         = _txtTitle.Text.Trim(),
                 EffectiveDate = _dtpStart.Value.Date
             });
             ctx.People.Add(p);

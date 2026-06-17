@@ -13,12 +13,9 @@ public class PersonDetailForm : Form
     private Button _btnReHire = null!;
     private TabControl _tabs = null!;
 
-    // Job Titles tab
     private DataGridView _gridTitles = null!;
-    // Teams tab
     private DataGridView _gridTeamsCurrent = null!;
     private DataGridView _gridTeamsHistory = null!;
-    // Employment History tab
     private DataGridView _gridEmployment = null!;
 
     public PersonDetailForm(int personId)
@@ -31,37 +28,36 @@ public class PersonDetailForm : Form
     private void BuildUI()
     {
         Text = "Person Details";
-        Size = new Size(820, 620);
+        Size = new Size(1220, 930);
         FormBorderStyle = FormBorderStyle.Sizable;
-        MinimumSize = new Size(660, 500);
+        MinimumSize = new Size(980, 750);
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.White;
 
-        // ── Header ───────────────────────────────────────────────
         var header = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 66,
+            Height = 100,
             BackColor = Color.FromArgb(30, 58, 95),
             Padding = new Padding(16, 0, 8, 0)
         };
 
-        var nameStack = new Panel { Dock = DockStyle.Left, Width = 460, BackColor = Color.Transparent };
+        var nameStack = new Panel { Dock = DockStyle.Left, Width = 690, BackColor = Color.Transparent };
         _lblName = new Label
         {
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 13f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 20f, FontStyle.Bold),
             Dock = DockStyle.Top,
-            Height = 36,
+            Height = 54,
             TextAlign = ContentAlignment.BottomLeft
         };
         _lblStatus = new Label
         {
             ForeColor = Color.FromArgb(200, 220, 240),
-            Font = new Font("Segoe UI", 8.5f, FontStyle.Italic),
+            Font = new Font("Segoe UI", 13f, FontStyle.Italic),
             Dock = DockStyle.Top,
-            Height = 22,
+            Height = 33,
             TextAlign = ContentAlignment.TopLeft
         };
         nameStack.Controls.Add(_lblStatus);
@@ -70,10 +66,10 @@ public class PersonDetailForm : Form
         var btnPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Right,
-            Width = 290,
+            Width = 435,
             FlowDirection = FlowDirection.RightToLeft,
             BackColor = Color.Transparent,
-            Padding = new Padding(0, 17, 0, 0)
+            Padding = new Padding(0, 28, 0, 0)
         };
 
         _btnSeparate = MakeHeaderButton("Separate", Color.FromArgb(192, 57, 43));
@@ -88,19 +84,17 @@ public class PersonDetailForm : Form
         header.Controls.Add(btnPanel);
         header.Controls.Add(nameStack);
 
-        // ── Tabs ─────────────────────────────────────────────────
-        _tabs = new TabControl { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 9f) };
+        _tabs = new TabControl { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 14f) };
         _tabs.TabPages.Add(BuildJobTitlesTab());
         _tabs.TabPages.Add(BuildTeamsTab());
         _tabs.TabPages.Add(BuildEmploymentHistoryTab());
 
-        // ── Close button ─────────────────────────────────────────
         var btnClose = new Button
         {
             Text = "Close",
             DialogResult = DialogResult.OK,
             Dock = DockStyle.Bottom,
-            Height = 36,
+            Height = 54,
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(52, 73, 94),
             ForeColor = Color.White
@@ -112,21 +106,19 @@ public class PersonDetailForm : Form
         Controls.Add(btnClose);
     }
 
-    // ── Tab builders ─────────────────────────────────────────────
-
     private TabPage BuildJobTitlesTab()
     {
         var page = new TabPage("Job Titles");
         var toolbar = new FlowLayoutPanel
         {
-            Dock = DockStyle.Top, Height = 40,
+            Dock = DockStyle.Top, Height = 60,
             FlowDirection = FlowDirection.LeftToRight,
-            Padding = new Padding(8, 6, 0, 0)
+            Padding = new Padding(8, 9, 0, 0)
         };
         var btnAdd = MakeSmallButton("+ Add Title", Color.FromArgb(39, 174, 96));
         btnAdd.Click += async (_, _) => await AddJobTitleAsync();
         toolbar.Controls.Add(btnAdd);
-        _gridTitles = BuildSmallGrid(("Title", 260), ("Effective Date", 130), ("Current?", 80));
+        _gridTitles = BuildSmallGrid(("Title", 390), ("Effective Date", 195), ("Current?", 120));
         page.Controls.Add(_gridTitles);
         page.Controls.Add(toolbar);
         return page;
@@ -139,25 +131,25 @@ public class PersonDetailForm : Form
         {
             Dock = DockStyle.Fill,
             Orientation = Orientation.Horizontal,
-            SplitterDistance = 200,
-            Panel1MinSize = 120,
-            Panel2MinSize = 80
+            SplitterDistance = 300,
+            Panel1MinSize = 180,
+            Panel2MinSize = 120
         };
 
-        var lblCurrent = new Label { Text = "Current Assignments", Font = new Font("Segoe UI", 9f, FontStyle.Bold), Dock = DockStyle.Top, Height = 22 };
-        var btnToolbar = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 36, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(4, 4, 0, 0) };
+        var lblCurrent = new Label { Text = "Current Assignments", Font = new Font("Segoe UI", 14f, FontStyle.Bold), Dock = DockStyle.Top, Height = 33 };
+        var btnToolbar = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 54, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(6, 6, 0, 0) };
         var btnAdd    = MakeSmallButton("+ Assign Team", Color.FromArgb(39, 174, 96));
         var btnRemove = MakeSmallButton("Remove",        Color.FromArgb(192, 57, 43));
         btnAdd.Click    += async (_, _) => await AddTeamAssignmentAsync();
         btnRemove.Click += async (_, _) => await RemoveTeamAssignmentAsync();
         btnToolbar.Controls.AddRange(new Control[] { btnAdd, btnRemove });
-        _gridTeamsCurrent = BuildSmallGrid(("Team/Project", 200), ("Assigned Date", 120), ("Effective Date", 120));
+        _gridTeamsCurrent = BuildSmallGrid(("Team/Project", 300), ("Assigned Date", 180), ("Effective Date", 180));
         split.Panel1.Controls.Add(_gridTeamsCurrent);
         split.Panel1.Controls.Add(btnToolbar);
         split.Panel1.Controls.Add(lblCurrent);
 
-        var lblHistory = new Label { Text = "History", Font = new Font("Segoe UI", 9f, FontStyle.Bold), Dock = DockStyle.Top, Height = 22 };
-        _gridTeamsHistory = BuildSmallGrid(("Team/Project", 200), ("Assigned", 110), ("Effective", 110), ("Removed", 110));
+        var lblHistory = new Label { Text = "History", Font = new Font("Segoe UI", 14f, FontStyle.Bold), Dock = DockStyle.Top, Height = 33 };
+        _gridTeamsHistory = BuildSmallGrid(("Team/Project", 300), ("Assigned", 165), ("Effective", 165), ("Removed", 165));
         split.Panel2.Controls.Add(_gridTeamsHistory);
         split.Panel2.Controls.Add(lblHistory);
 
@@ -169,14 +161,12 @@ public class PersonDetailForm : Form
     {
         var page = new TabPage("Employment History");
         _gridEmployment = BuildSmallGrid(
-            ("Hire Date", 110), ("Separation Date", 120),
-            ("Reason", 170), ("Notes", 260));
+            ("Hire Date", 165), ("Separation Date", 180),
+            ("Reason", 255), ("Notes", 390));
         _gridEmployment.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
         page.Controls.Add(_gridEmployment);
         return page;
     }
-
-    // ── Data loading ─────────────────────────────────────────────
 
     private async Task LoadAsync()
     {
@@ -191,7 +181,6 @@ public class PersonDetailForm : Form
 
         _lblName.Text = person.FullName;
 
-        // Active status label + button visibility
         if (person.IsActive)
         {
             var activePeriod = person.EmploymentPeriods
@@ -209,15 +198,13 @@ public class PersonDetailForm : Form
                 .Where(p => p.SeparationDate != null)
                 .OrderByDescending(p => p.SeparationDate)
                 .FirstOrDefault();
-            var sepDate   = lastPeriod?.SeparationDate?.ToString("MM/dd/yyyy") ?? "—";
-            var sepReason = lastPeriod?.SeparationReason?.ToString() ?? "";
+            var sepDate = lastPeriod?.SeparationDate?.ToString("MM/dd/yyyy") ?? "—";
             _lblStatus.Text      = $"Separated  |  {sepDate}  |  {FormatReason(lastPeriod?.SeparationReason)}";
             _lblStatus.ForeColor = Color.FromArgb(255, 180, 160);
             _btnSeparate.Visible = false;
             _btnReHire.Visible   = true;
         }
 
-        // Job titles
         _gridTitles.Rows.Clear();
         var titles = person.JobTitles.OrderByDescending(j => j.EffectiveDate).ToList();
         for (int i = 0; i < titles.Count; i++)
@@ -227,7 +214,6 @@ public class PersonDetailForm : Form
             _gridTitles.Rows[^1].Tag = jt.PersonJobTitleId;
         }
 
-        // Teams – current
         _gridTeamsCurrent.Rows.Clear();
         foreach (var a in person.ProjectAssignments.Where(a => a.RemovedDate == null).OrderBy(a => a.EffectiveDate))
         {
@@ -235,7 +221,6 @@ public class PersonDetailForm : Form
             _gridTeamsCurrent.Rows[^1].Tag = a.AssignmentId;
         }
 
-        // Teams – history
         _gridTeamsHistory.Rows.Clear();
         foreach (var a in person.ProjectAssignments.Where(a => a.RemovedDate != null).OrderByDescending(a => a.RemovedDate))
         {
@@ -244,21 +229,18 @@ public class PersonDetailForm : Form
             _gridTeamsHistory.Rows[^1].Tag = a.AssignmentId;
         }
 
-        // Employment history
         _gridEmployment.Rows.Clear();
         foreach (var ep in person.EmploymentPeriods.OrderByDescending(p => p.HireDate))
         {
-            var sepDate  = ep.SeparationDate?.ToShortDateString() ?? "Active";
-            var reason   = ep.SeparationReason.HasValue ? FormatReason(ep.SeparationReason) : "";
-            var notes    = ep.SeparationNotes ?? "";
-            var rowIdx   = _gridEmployment.Rows.Add(ep.HireDate.ToShortDateString(), sepDate, reason, notes);
+            var sepDate = ep.SeparationDate?.ToShortDateString() ?? "Active";
+            var reason  = ep.SeparationReason.HasValue ? FormatReason(ep.SeparationReason) : "";
+            var notes   = ep.SeparationNotes ?? "";
+            var rowIdx  = _gridEmployment.Rows.Add(ep.HireDate.ToShortDateString(), sepDate, reason, notes);
             _gridEmployment.Rows[rowIdx].Tag = ep.PeriodId;
             if (!ep.SeparationDate.HasValue)
                 _gridEmployment.Rows[rowIdx].DefaultCellStyle.BackColor = Color.FromArgb(235, 252, 240);
         }
     }
-
-    // ── Actions ──────────────────────────────────────────────────
 
     private async Task EditBasicInfoAsync()
     {
@@ -321,24 +303,22 @@ public class PersonDetailForm : Form
             await LoadAsync();
     }
 
-    // ── Helpers ──────────────────────────────────────────────────
-
     private static string FormatReason(SeparationReason? reason) => reason switch
     {
-        SeparationReason.EndOfInternship    => "End of Internship",
+        SeparationReason.EndOfInternship      => "End of Internship",
         SeparationReason.VoluntaryResignation => "Voluntary Resignation",
-        SeparationReason.Termination        => "Termination",
-        SeparationReason.Other              => "Other",
-        _                                   => ""
+        SeparationReason.Termination          => "Termination",
+        SeparationReason.Other                => "Other",
+        _                                     => ""
     };
 
     private static Button MakeHeaderButton(string text, Color back)
     {
         var btn = new Button
         {
-            Text = text, Height = 30, AutoSize = true,
+            Text = text, Height = 45, AutoSize = true,
             FlatStyle = FlatStyle.Flat, BackColor = back, ForeColor = Color.White,
-            Cursor = Cursors.Hand, Margin = new Padding(6, 0, 0, 0), Padding = new Padding(10, 0, 10, 0)
+            Cursor = Cursors.Hand, Margin = new Padding(9, 0, 0, 0), Padding = new Padding(15, 0, 15, 0)
         };
         btn.FlatAppearance.BorderSize = 0;
         return btn;
@@ -348,9 +328,9 @@ public class PersonDetailForm : Form
     {
         var btn = new Button
         {
-            Text = text, Height = 26, AutoSize = true,
+            Text = text, Height = 40, AutoSize = true,
             FlatStyle = FlatStyle.Flat, BackColor = back, ForeColor = Color.White,
-            Cursor = Cursors.Hand, Margin = new Padding(0, 0, 6, 0), Padding = new Padding(6, 0, 6, 0)
+            Cursor = Cursors.Hand, Margin = new Padding(0, 0, 9, 0), Padding = new Padding(9, 0, 9, 0)
         };
         btn.FlatAppearance.BorderSize = 0;
         return btn;
@@ -362,10 +342,10 @@ public class PersonDetailForm : Form
         dgv.EnableHeadersVisualStyles = false;
         dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(52, 73, 94);
         dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 8.5f, FontStyle.Bold);
-        dgv.ColumnHeadersHeight = 28;
-        dgv.RowTemplate.Height = 26;
-        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 9f);
+        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 13f, FontStyle.Bold);
+        dgv.ColumnHeadersHeight = 42;
+        dgv.RowTemplate.Height = 40;
+        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 14f);
         dgv.GridColor = Color.FromArgb(220, 230, 240);
         dgv.BorderStyle = BorderStyle.None;
         dgv.RowHeadersVisible = false;

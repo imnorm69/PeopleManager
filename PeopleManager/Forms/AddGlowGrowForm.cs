@@ -26,12 +26,12 @@ public class AddGlowGrowForm : Form
     private void BuildUI()
     {
         Text = _glowGrowId.HasValue ? "Edit Glow/Grow" : "Add Glow/Grow";
-        Size = new Size(520, 420);
+        Size = new Size(760, 630);
         FormBorderStyle = FormBorderStyle.Sizable;
-        MinimumSize = new Size(400, 360);
+        MinimumSize = new Size(600, 540);
         MaximizeBox = false; MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.White;
 
         var layout = new TableLayoutPanel
@@ -42,15 +42,15 @@ public class AddGlowGrowForm : Form
             RowCount = 7,
             AutoSize = false
         };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34)); // Person
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34)); // Type
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34)); // Source
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51)); // Person
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51)); // Type
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51)); // Source
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); // Note
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34)); // Communicated checkbox
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34)); // Communicated date
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40)); // Buttons
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51)); // Communicated checkbox
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51)); // Communicated date
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60)); // Buttons
 
         _cboPerson = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill };
         _cboType   = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill };
@@ -81,23 +81,23 @@ public class AddGlowGrowForm : Form
         };
         _chkCommunicated.CheckedChanged += (_, _) => _dtpCommunicated.Enabled = _chkCommunicated.Checked;
 
-        layout.Controls.Add(new Label { Text = "Person *",  TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill }, 0, 0);
+        layout.Controls.Add(new Label { Text = "Person *", TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill }, 0, 0);
         layout.Controls.Add(_cboPerson, 1, 0);
-        layout.Controls.Add(new Label { Text = "Type *",    TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill }, 0, 1);
+        layout.Controls.Add(new Label { Text = "Type *",   TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill }, 0, 1);
         layout.Controls.Add(_cboType,   1, 1);
-        layout.Controls.Add(new Label { Text = "Source",    TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill }, 0, 2);
+        layout.Controls.Add(new Label { Text = "Source",   TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill }, 0, 2);
         layout.Controls.Add(_txtSource, 1, 2);
-        layout.Controls.Add(new Label { Text = "Note *",    TextAlign = ContentAlignment.TopRight, Dock = DockStyle.Fill, Padding = new Padding(0, 6, 4, 0) }, 0, 3);
+        layout.Controls.Add(new Label { Text = "Note *",   TextAlign = ContentAlignment.TopRight, Dock = DockStyle.Fill, Padding = new Padding(0, 6, 4, 0) }, 0, 3);
         layout.Controls.Add(_txtNote,   1, 3);
         layout.Controls.Add(_chkCommunicated, 0, 4);
         layout.SetColumnSpan(_chkCommunicated, 2);
         layout.Controls.Add(new Label { Text = "Date:", TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill }, 0, 5);
         layout.Controls.Add(_dtpCommunicated, 1, 5);
 
-        var btnPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Fill, Padding = new Padding(0, 4, 0, 0) };
+        var btnPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Fill, Padding = new Padding(0, 8, 0, 0) };
         layout.SetColumnSpan(btnPanel, 2);
-        var btnSave   = new Button { Text = "Save",   DialogResult = DialogResult.OK,     Width = 80 };
-        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 80 };
+        var btnSave   = new Button { Text = "Save",   DialogResult = DialogResult.OK,     Width = 120 };
+        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 120 };
         btnSave.Click += async (_, _) => await SaveAsync();
         btnPanel.Controls.AddRange(new Control[] { btnCancel, btnSave });
         layout.Controls.Add(btnPanel, 0, 6);
@@ -171,12 +171,12 @@ public class AddGlowGrowForm : Form
         {
             ctx.GlowsGrows.Add(new GlowGrow
             {
-                PersonId          = pi.Id,
-                Type              = (GlowGrowType)_cboType.SelectedIndex,
-                Source            = source,
-                Note              = _txtNote.Text.Trim(),
-                CreatedDate       = DateTime.Today,
-                CommunicatedDate  = _chkCommunicated.Checked ? _dtpCommunicated.Value.Date : null
+                PersonId         = pi.Id,
+                Type             = (GlowGrowType)_cboType.SelectedIndex,
+                Source           = source,
+                Note             = _txtNote.Text.Trim(),
+                CreatedDate      = DateTime.Today,
+                CommunicatedDate = _chkCommunicated.Checked ? _dtpCommunicated.Value.Date : null
             });
         }
         await ctx.SaveChangesAsync();

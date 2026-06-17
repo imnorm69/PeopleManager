@@ -25,7 +25,7 @@ public class GlowsGrowsControl : UserControl
         var header = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 60,
+            Height = 90,
             BackColor = Color.White,
             Padding = new Padding(16, 0, 16, 0)
         };
@@ -33,23 +33,23 @@ public class GlowsGrowsControl : UserControl
         var lblTitle = new Label
         {
             Text = "Glows & Grows",
-            Font = new Font("Segoe UI", 14f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 21f, FontStyle.Bold),
             ForeColor = Color.FromArgb(30, 58, 95),
             Dock = DockStyle.Left,
             AutoSize = false,
-            Width = 180,
+            Width = 270,
             TextAlign = ContentAlignment.MiddleLeft
         };
 
         var toolBar = new FlowLayoutPanel
         {
             Dock = DockStyle.Right,
-            Width = 640,
+            Width = 960,
             FlowDirection = FlowDirection.LeftToRight
         };
 
-        _cboPerson = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 180, Margin = new Padding(0, 16, 6, 0) };
-        _cboType   = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 110, Margin = new Padding(0, 16, 6, 0) };
+        _cboPerson = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 270, Margin = new Padding(0, 24, 9, 0) };
+        _cboType   = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 165, Margin = new Padding(0, 24, 9, 0) };
         _cboType.Items.AddRange(new object[] { "All", "Glows", "Grows" });
         _cboType.SelectedIndex = 0;
 
@@ -57,18 +57,18 @@ public class GlowsGrowsControl : UserControl
         {
             Text = "Not yet communicated",
             AutoSize = true,
-            Margin = new Padding(0, 18, 6, 0)
+            Margin = new Padding(0, 27, 9, 0)
         };
 
-        var btnAdd = MakeButton("+ Add", Color.FromArgb(39, 174, 96));
-        var btnEdit = MakeButton("Edit", Color.FromArgb(41, 128, 185));
-        var btnCommunicated = MakeButton("Mark Communicated", Color.FromArgb(142, 68, 173));
+        var btnAdd           = MakeButton("+ Add",              Color.FromArgb(39, 174, 96));
+        var btnEdit          = MakeButton("Edit",               Color.FromArgb(41, 128, 185));
+        var btnCommunicated  = MakeButton("Mark Communicated",  Color.FromArgb(142, 68, 173));
 
-        _cboPerson.SelectedIndexChanged += async (_, _) => await LoadAsync();
-        _cboType.SelectedIndexChanged   += async (_, _) => await LoadAsync();
+        _cboPerson.SelectedIndexChanged  += async (_, _) => await LoadAsync();
+        _cboType.SelectedIndexChanged    += async (_, _) => await LoadAsync();
         _chkUncommunicated.CheckedChanged += async (_, _) => await LoadAsync();
-        btnAdd.Click  += async (_, _) => await AddAsync();
-        btnEdit.Click += async (_, _) => await EditAsync();
+        btnAdd.Click          += async (_, _) => await AddAsync();
+        btnEdit.Click         += async (_, _) => await EditAsync();
         btnCommunicated.Click += async (_, _) => await MarkCommunicatedAsync();
 
         toolBar.Controls.AddRange(new Control[] { _cboPerson, _cboType, _chkUncommunicated, btnAdd, btnEdit, btnCommunicated });
@@ -125,7 +125,6 @@ public class GlowsGrowsControl : UserControl
             );
             _grid.Rows[^1].Tag = item.GlowGrowId;
 
-            // Color code rows
             _grid.Rows[^1].DefaultCellStyle.ForeColor =
                 item.Type == GlowGrowType.Glow ? Color.FromArgb(39, 174, 96) : Color.FromArgb(192, 57, 43);
         }
@@ -162,9 +161,9 @@ public class GlowsGrowsControl : UserControl
     {
         var btn = new Button
         {
-            Text = text, Height = 28, AutoSize = true,
+            Text = text, Height = 42, AutoSize = true,
             FlatStyle = FlatStyle.Flat, BackColor = back, ForeColor = Color.White,
-            Cursor = Cursors.Hand, Margin = new Padding(4, 15, 0, 0), Padding = new Padding(8, 0, 8, 0)
+            Cursor = Cursors.Hand, Margin = new Padding(6, 24, 0, 0), Padding = new Padding(12, 0, 12, 0)
         };
         btn.FlatAppearance.BorderSize = 0;
         return btn;
@@ -176,10 +175,10 @@ public class GlowsGrowsControl : UserControl
         dgv.EnableHeadersVisualStyles = false;
         dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(30, 58, 95);
         dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
-        dgv.ColumnHeadersHeight = 34;
-        dgv.RowTemplate.Height = 30;
-        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 9f);
+        dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 14f, FontStyle.Bold);
+        dgv.ColumnHeadersHeight = 51;
+        dgv.RowTemplate.Height = 45;
+        dgv.DefaultCellStyle.Font = new Font("Segoe UI", 14f);
         dgv.GridColor = Color.FromArgb(220, 230, 240);
         dgv.BorderStyle = BorderStyle.None;
         dgv.RowHeadersVisible = false;
@@ -190,12 +189,12 @@ public class GlowsGrowsControl : UserControl
         dgv.AllowUserToDeleteRows = false;
         dgv.BackgroundColor = Color.White;
 
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Person",       Width = 150 });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Type",         Width = 60 });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Source",       Width = 180 });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Note",         Width = 260, AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Recorded",     Width = 90 });
-        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Communicated", Width = 110 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Person",       Width = 225 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Type",         Width = 90 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Source",       Width = 270 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Note",         Width = 390, AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Recorded",     Width = 135 });
+        dgv.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Communicated", Width = 165 });
         return dgv;
     }
 

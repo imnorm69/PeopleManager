@@ -21,12 +21,12 @@ public class NewMeetingDialog : Form
     private void BuildUI()
     {
         Text = "New 1:1 Meeting";
-        Size = new Size(360, 175);
+        Size = new Size(520, 260);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.White;
 
         var layout = new TableLayoutPanel
@@ -36,11 +36,11 @@ public class NewMeetingDialog : Form
             ColumnCount = 2,
             RowCount = 3
         };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 60));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
 
         _cboPerson = new ComboBox
         {
@@ -67,8 +67,8 @@ public class NewMeetingDialog : Form
         };
         layout.SetColumnSpan(btnPanel, 2);
 
-        var btnOK     = new Button { Text = "OK",     Width = 80, DialogResult = DialogResult.OK };
-        var btnCancel = new Button { Text = "Cancel", Width = 80, DialogResult = DialogResult.Cancel };
+        var btnOK     = new Button { Text = "OK",     Width = 120, DialogResult = DialogResult.OK };
+        var btnCancel = new Button { Text = "Cancel", Width = 120, DialogResult = DialogResult.Cancel };
         btnOK.Click += (_, _) => ValidateAndAccept();
         btnPanel.Controls.AddRange(new Control[] { btnCancel, btnOK });
         layout.Controls.Add(btnPanel, 0, 2);
@@ -87,7 +87,6 @@ public class NewMeetingDialog : Form
             .ToListAsync();
         foreach (var p in people)
             _cboPerson.Items.Add(new PersonItem(p.PersonId, p.DisplayName));
-        // No default selection — person must actively choose
     }
 
     private void ValidateAndAccept()

@@ -24,15 +24,15 @@ public class AddTeamAssignmentForm : Form
     private void BuildUI()
     {
         Text = "Assign to Team / Project";
-        Size = new Size(420, 280);
+        Size = new Size(620, 420);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false; MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.White;
 
         var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(16), ColumnCount = 2, RowCount = 6 };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
         _rbExisting = new RadioButton { Text = "Existing team:", Dock = DockStyle.Fill, Checked = true };
@@ -56,8 +56,8 @@ public class AddTeamAssignmentForm : Form
 
         var btnPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Fill, Padding = new Padding(0, 6, 0, 0) };
         layout.SetColumnSpan(btnPanel, 2);
-        var btnSave   = new Button { Text = "Save",   DialogResult = DialogResult.OK,     Width = 80 };
-        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 80 };
+        var btnSave   = new Button { Text = "Save",   DialogResult = DialogResult.OK,     Width = 120 };
+        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 120 };
         btnSave.Click += async (_, _) => await SaveAsync();
         btnPanel.Controls.AddRange(new Control[] { btnCancel, btnSave });
         layout.Controls.Add(btnPanel, 0, 4);

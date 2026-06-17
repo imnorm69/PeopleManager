@@ -28,16 +28,16 @@ public class MainForm : Form
     private void InitializeLayout()
     {
         Text = "People Manager";
-        Size = new Size(1280, 780);
-        MinimumSize = new Size(960, 620);
+        Size = new Size(1900, 1170);
+        MinimumSize = new Size(1400, 900);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.FromArgb(240, 242, 245);
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
 
         // ── Sidebar ──────────────────────────────────────────────
         _sidebar = new Panel
         {
-            Width = 200,
+            Width = 280,
             Dock = DockStyle.Left,
             BackColor = SidebarColor
         };
@@ -46,9 +46,9 @@ public class MainForm : Form
         {
             Text = "People Manager",
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+            Font = new Font("Segoe UI", 18f, FontStyle.Bold),
             Dock = DockStyle.Top,
-            Height = 60,
+            Height = 86,
             TextAlign = ContentAlignment.MiddleCenter,
             Padding = new Padding(8)
         };
@@ -62,9 +62,9 @@ public class MainForm : Form
             Padding = new Padding(0, 8, 0, 0)
         };
 
-        _btnDashboard   = MakeNavButton("  Dashboard",   "📊");
-        _btnPeople      = MakeNavButton("  People",      "👥");
-        _btnMeetings    = MakeNavButton("  1:1 Meetings","📝");
+        _btnDashboard   = MakeNavButton("  Dashboard",    "📊");
+        _btnPeople      = MakeNavButton("  People",       "👥");
+        _btnMeetings    = MakeNavButton("  1:1 Meetings", "📝");
         _btnGlowsGrows  = MakeNavButton("  Glows & Grows","⭐");
         _btnTemplates   = MakeNavButton("  Questions",    "☑");
 
@@ -98,11 +98,11 @@ public class MainForm : Form
         var btn = new Button
         {
             Text = text,
-            Width = 200,
-            Height = 46,
+            Width = 280,
+            Height = 68,
             FlatStyle = FlatStyle.Flat,
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 10f),
+            Font = new Font("Segoe UI", 15f),
             TextAlign = ContentAlignment.MiddleLeft,
             Padding = new Padding(16, 0, 0, 0),
             Cursor = Cursors.Hand,

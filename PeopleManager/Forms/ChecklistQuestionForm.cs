@@ -19,13 +19,13 @@ public class ChecklistQuestionForm : Form
     private void BuildUI()
     {
         Text = _questionId.HasValue ? "Edit Question" : "New Checklist Question";
-        Size = new Size(480, 190);
+        Size = new Size(700, 285);
         FormBorderStyle = FormBorderStyle.Sizable;
-        MinimumSize = new Size(380, 170);
+        MinimumSize = new Size(560, 255);
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.White;
 
         var layout = new TableLayoutPanel
@@ -35,11 +35,11 @@ public class ChecklistQuestionForm : Form
             ColumnCount = 2,
             RowCount = 3
         };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 63));
 
         _txtDescription = new TextBox { Dock = DockStyle.Fill, MaxLength = 500 };
         _cboValueType   = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill };
@@ -55,8 +55,8 @@ public class ChecklistQuestionForm : Form
 
         var btnPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Fill, Padding = new Padding(0, 6, 0, 0) };
         layout.SetColumnSpan(btnPanel, 2);
-        var btnSave   = new Button { Text = "Save",   Width = 80, DialogResult = DialogResult.OK };
-        var btnCancel = new Button { Text = "Cancel", Width = 80, DialogResult = DialogResult.Cancel };
+        var btnSave   = new Button { Text = "Save",   Width = 120, DialogResult = DialogResult.OK };
+        var btnCancel = new Button { Text = "Cancel", Width = 120, DialogResult = DialogResult.Cancel };
         btnSave.Click += async (_, _) => await SaveAsync();
         btnPanel.Controls.AddRange(new Control[] { btnCancel, btnSave });
         layout.Controls.Add(btnPanel, 0, 2);
@@ -71,7 +71,7 @@ public class ChecklistQuestionForm : Form
         await using var ctx = DbFactory.Create();
         var q = await ctx.ChecklistQuestions.FindAsync(id);
         if (q == null) return;
-        _txtDescription.Text    = q.Description;
+        _txtDescription.Text        = q.Description;
         _cboValueType.SelectedIndex = (int)q.ValueType;
     }
 

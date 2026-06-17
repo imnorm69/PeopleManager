@@ -15,7 +15,6 @@ public class AddActionItemForm : Form
     private ComboBox       _cboAssignee = null!;
     private DateTimePicker _dtpDue      = null!;
 
-    // @-mention state
     private List<(int Id, string FullName)> _mentionPeople = new();
     private ToolStripDropDown? _mentionDrop;
     private ListBox            _mentionList  = null!;
@@ -35,20 +34,19 @@ public class AddActionItemForm : Form
     private void BuildUI()
     {
         Text = "Add Action Item";
-        Size = new Size(500, 330);
-        MinimumSize = new Size(420, 280);
+        Size = new Size(740, 495);
+        MinimumSize = new Size(620, 420);
         FormBorderStyle = FormBorderStyle.Sizable;
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 9f);
+        Font = new Font("Segoe UI", 14f);
         BackColor = Color.White;
 
-        // Info banner
         var banner = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 30,
+            Height = 45,
             BackColor = Color.FromArgb(30, 58, 95),
             Padding = new Padding(12, 0, 0, 0)
         };
@@ -56,12 +54,11 @@ public class AddActionItemForm : Form
         {
             Text = $"Meeting with {_personDisplayName}  ·  {_meetingDate:MMMM d, yyyy}",
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 8.5f),
+            Font = new Font("Segoe UI", 13f),
             Dock = DockStyle.Fill,
             TextAlign = ContentAlignment.MiddleLeft
         });
 
-        // Main layout
         var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
@@ -69,20 +66,19 @@ public class AddActionItemForm : Form
             ColumnCount = 2,
             RowCount = 4
         };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 135));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); // description
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34)); // assigned to
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34)); // due date
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40)); // buttons
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51)); // assigned to
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51)); // due date
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60)); // buttons
 
-        // Description
         _rtbDesc = new RichTextBox
         {
             Dock = DockStyle.Fill,
             ScrollBars = RichTextBoxScrollBars.Vertical,
-            Font = new Font("Segoe UI", 9.5f),
-            AcceptsTab = false   // Tab will be used to commit @-mention
+            Font = new Font("Segoe UI", 14f),
+            AcceptsTab = false
         };
         _rtbDesc.KeyDown     += OnDescKeyDown;
         _rtbDesc.TextChanged += OnDescTextChanged;
@@ -91,7 +87,6 @@ public class AddActionItemForm : Form
         layout.Controls.Add(new Label { Text = "Description *", TextAlign = ContentAlignment.TopRight, Dock = DockStyle.Fill, Padding = new Padding(0, 5, 4, 0) }, 0, 0);
         layout.Controls.Add(_rtbDesc, 1, 0);
 
-        // Assigned to
         _cboAssignee = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill };
         _cboAssignee.Items.Add("Manager");
         _cboAssignee.Items.Add(_personDisplayName);
@@ -99,7 +94,6 @@ public class AddActionItemForm : Form
         layout.Controls.Add(new Label { Text = "Assign to", TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill }, 0, 1);
         layout.Controls.Add(_cboAssignee, 1, 1);
 
-        // Due date
         _dtpDue = new DateTimePicker
         {
             Dock = DockStyle.Fill,
@@ -109,11 +103,10 @@ public class AddActionItemForm : Form
         layout.Controls.Add(new Label { Text = "Due Date", TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill }, 0, 2);
         layout.Controls.Add(_dtpDue, 1, 2);
 
-        // Buttons
         var btnPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Fill, Padding = new Padding(0, 6, 0, 0) };
         layout.SetColumnSpan(btnPanel, 2);
-        var btnAdd    = new Button { Text = "Add",    Width = 80, DialogResult = DialogResult.OK };
-        var btnCancel = new Button { Text = "Cancel", Width = 80, DialogResult = DialogResult.Cancel };
+        var btnAdd    = new Button { Text = "Add",    Width = 120, DialogResult = DialogResult.OK };
+        var btnCancel = new Button { Text = "Cancel", Width = 120, DialogResult = DialogResult.Cancel };
         btnAdd.Click += async (_, _) => await SaveAsync();
         btnPanel.Controls.AddRange(new Control[] { btnCancel, btnAdd });
         layout.Controls.Add(btnPanel, 0, 3);
@@ -121,22 +114,19 @@ public class AddActionItemForm : Form
         AcceptButton = btnAdd;
         CancelButton = btnCancel;
 
-        // @-mention popup
         InitMentionDropdown();
 
         Controls.Add(layout);
         Controls.Add(banner);
     }
 
-    // ── @-mention implementation ─────────────────────────────────
-
     private void InitMentionDropdown()
     {
         _mentionList = new ListBox
         {
             BorderStyle = BorderStyle.None,
-            Font = new Font("Segoe UI", 9f),
-            Width = 240,
+            Font = new Font("Segoe UI", 14f),
+            Width = 360,
             IntegralHeight = true
         };
         _mentionList.Click += (_, _) => CommitMention();
@@ -146,7 +136,7 @@ public class AddActionItemForm : Form
             Padding  = Padding.Empty,
             Margin   = Padding.Empty,
             AutoSize = false,
-            Size     = new Size(240, 120)
+            Size     = new Size(360, 180)
         };
 
         _mentionDrop = new ToolStripDropDown { Padding = Padding.Empty, AutoClose = false };
@@ -165,7 +155,6 @@ public class AddActionItemForm : Form
         if (atIdx < 0) { _mentionDrop?.Close(); return; }
 
         var fragment = text[(atIdx + 1)..];
-        // Once a space follows the fragment the mention is done
         if (fragment.Contains(' ')) { _mentionDrop?.Close(); return; }
 
         _mentionStart = atIdx;
@@ -184,9 +173,8 @@ public class AddActionItemForm : Form
         foreach (var m in matches) _mentionList.Items.Add(m.FullName);
         _mentionList.SelectedIndex = 0;
 
-        // Resize host to fit items
         if (_mentionDrop!.Items[0] is ToolStripControlHost h)
-            h.Size = new Size(240, Math.Min(matches.Count * _mentionList.ItemHeight, 160));
+            h.Size = new Size(360, Math.Min(matches.Count * _mentionList.ItemHeight, 240));
 
         var charPt   = _rtbDesc.GetPositionFromCharIndex(atIdx);
         var screenPt = _rtbDesc.PointToScreen(new Point(charPt.X, charPt.Y + _rtbDesc.Font.Height + 4));
@@ -238,8 +226,6 @@ public class AddActionItemForm : Form
         _mentionStart = -1;
         _rtbDesc.Focus();
     }
-
-    // ── Data ─────────────────────────────────────────────────────
 
     private async Task LoadPeopleAsync()
     {
