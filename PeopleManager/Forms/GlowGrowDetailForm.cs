@@ -2,8 +2,13 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Read-only detail view for a single glow or grow item, showing all fields including the full note text.
+/// </summary>
 public class GlowGrowDetailForm : Form
 {
+    /// <summary>Initialises and builds the detail view for the given glow/grow item.</summary>
+    /// <param name="item">The glow or grow record to display.</param>
     public GlowGrowDetailForm(GlowGrow item)
     {
         BuildUI(item);

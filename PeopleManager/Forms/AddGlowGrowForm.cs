@@ -4,6 +4,9 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Dialog for adding a new glow/grow feedback item or editing an existing one.
+/// </summary>
 public class AddGlowGrowForm : Form
 {
     private readonly int? _glowGrowId;
@@ -15,6 +18,9 @@ public class AddGlowGrowForm : Form
     private CheckBox _chkCommunicated = null!;
     private DateTimePicker _dtpCommunicated = null!;
 
+    /// <summary>Initialises the form.</summary>
+    /// <param name="glowGrowId">The existing item to edit, or null to create a new one.</param>
+    /// <param name="preselectedPersonId">Pre-selects a person in the dropdown when creating a new item.</param>
     public AddGlowGrowForm(int? glowGrowId, int? preselectedPersonId)
     {
         _glowGrowId = glowGrowId;

@@ -3,6 +3,10 @@ using PeopleManager.Data;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Small dialog for picking a person and date before opening a new 1:1 meeting.
+/// Exposes the selected values via <see cref="SelectedPersonId"/> and <see cref="MeetingDate"/>.
+/// </summary>
 public class NewMeetingDialog : Form
 {
     public int      SelectedPersonId   { get; private set; }
@@ -89,6 +93,7 @@ public class NewMeetingDialog : Form
             _cboPerson.Items.Add(new PersonItem(p.PersonId, p.DisplayName));
     }
 
+    /// <summary>Validates that a person is selected before accepting the dialog.</summary>
     private void ValidateAndAccept()
     {
         if (_cboPerson.SelectedItem is not PersonItem pi)

@@ -3,6 +3,9 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Dialog for adding a new person (with initial job title) or editing an existing person's basic info.
+/// </summary>
 public class AddEditPersonForm : Form
 {
     private readonly int? _personId;
@@ -11,6 +14,8 @@ public class AddEditPersonForm : Form
     private DateTimePicker _dtpStart = null!;
     private TextBox _txtTitle = null!;
 
+    /// <summary>Initialises the form in add mode when <paramref name="personId"/> is null, or edit mode otherwise.</summary>
+    /// <param name="personId">The person to edit, or null to create a new person.</param>
     public AddEditPersonForm(int? personId)
     {
         _personId = personId;

@@ -4,6 +4,10 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Detail form for a single person showing job title history, team assignments,
+/// and employment history. Also provides Separate and Re-hire actions.
+/// </summary>
 public class PersonDetailForm : Form
 {
     private readonly int _personId;
@@ -18,6 +22,8 @@ public class PersonDetailForm : Form
     private DataGridView _gridTeamsHistory = null!;
     private DataGridView _gridEmployment = null!;
 
+    /// <summary>Initialises the form for the specified person.</summary>
+    /// <param name="personId">Primary key of the person to display.</param>
     public PersonDetailForm(int personId)
     {
         _personId = personId;
@@ -263,6 +269,7 @@ public class PersonDetailForm : Form
             await LoadAsync();
     }
 
+    /// <summary>Marks the selected current team assignment as removed as of today.</summary>
     private async Task RemoveTeamAssignmentAsync()
     {
         if (_gridTeamsCurrent.CurrentRow?.Tag is not int id)
@@ -303,6 +310,7 @@ public class PersonDetailForm : Form
             await LoadAsync();
     }
 
+    /// <summary>Converts a <see cref="SeparationReason"/> enum value to a human-readable string.</summary>
     private static string FormatReason(SeparationReason? reason) => reason switch
     {
         SeparationReason.EndOfInternship      => "End of Internship",

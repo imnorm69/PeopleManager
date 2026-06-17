@@ -2,6 +2,10 @@ using PeopleManager.Data;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Dialog for marking an action item as complete. Displays the item description,
+/// captures a completion date and optional notes, and optionally links the completion to a meeting.
+/// </summary>
 public class CompleteActionItemForm : Form
 {
     private readonly int  _actionItemId;
@@ -11,6 +15,9 @@ public class CompleteActionItemForm : Form
     private DateTimePicker _dtpCompleted   = null!;
     private RichTextBox    _rtbNotes       = null!;
 
+    /// <summary>Initialises the completion form.</summary>
+    /// <param name="actionItemId">The action item being marked complete.</param>
+    /// <param name="meetingId">The meeting to link the completion to, or null if completed outside a meeting.</param>
     public CompleteActionItemForm(int actionItemId, int? meetingId = null)
     {
         _actionItemId = actionItemId;

@@ -3,12 +3,17 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Dialog for creating or editing a checklist question, including its description and answer value type.
+/// </summary>
 public class ChecklistQuestionForm : Form
 {
     private readonly int? _questionId;
     private TextBox  _txtDescription = null!;
     private ComboBox _cboValueType   = null!;
 
+    /// <summary>Initialises the form in create mode when <paramref name="questionId"/> is null, or edit mode otherwise.</summary>
+    /// <param name="questionId">The question to edit, or null to create a new one.</param>
     public ChecklistQuestionForm(int? questionId)
     {
         _questionId = questionId;

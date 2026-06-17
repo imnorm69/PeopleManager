@@ -4,6 +4,10 @@ using PeopleManager.Forms;
 
 namespace PeopleManager.Controls;
 
+/// <summary>
+/// People screen listing all employees with search and active/separated filter,
+/// and toolbar buttons to add, edit, or delete a person.
+/// </summary>
 public class PeopleControl : UserControl
 {
     private DataGridView _grid = null!;
@@ -15,6 +19,7 @@ public class PeopleControl : UserControl
 
     private ComboBox _cboStatus = null!;
 
+    /// <summary>Initialises the control, builds the UI, and starts an async data load.</summary>
     public PeopleControl()
     {
         BuildUI();
@@ -96,6 +101,7 @@ public class PeopleControl : UserControl
         Controls.Add(header);
     }
 
+    /// <summary>Loads all people from the database into the in-memory list, then filters the grid.</summary>
     private async Task LoadAsync()
     {
         await using var ctx = DbFactory.Create();
@@ -119,6 +125,7 @@ public class PeopleControl : UserControl
         FilterGrid();
     }
 
+    /// <summary>Applies the current search text and status filter to the cached row list and refreshes the grid.</summary>
     private void FilterGrid()
     {
         var search = _txtSearch.Text.Trim().ToLower();
@@ -146,12 +153,14 @@ public class PeopleControl : UserControl
         }
     }
 
+    /// <summary>Returns the person ID stored in the currently selected grid row, or null if nothing is selected.</summary>
     private int? SelectedPersonId()
     {
         if (_grid.CurrentRow == null) return null;
         return _grid.CurrentRow.Tag as int?;
     }
 
+    /// <summary>Opens the Add Person dialog and refreshes the grid on success.</summary>
     private async Task AddPersonAsync()
     {
         using var form = new AddEditPersonForm(null);
@@ -159,6 +168,7 @@ public class PeopleControl : UserControl
             await LoadAsync();
     }
 
+    /// <summary>Opens the Person Details form for the selected person.</summary>
     private async Task EditPersonAsync()
     {
         var id = SelectedPersonId();
@@ -168,6 +178,7 @@ public class PeopleControl : UserControl
         await LoadAsync();
     }
 
+    /// <summary>Prompts for confirmation and permanently deletes the selected person and all related data.</summary>
     private async Task DeletePersonAsync()
     {
         var id = SelectedPersonId();

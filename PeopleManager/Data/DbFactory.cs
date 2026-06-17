@@ -2,11 +2,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PeopleManager.Data;
 
+/// <summary>
+/// Factory for creating <see cref="AppDbContext"/> instances and managing database initialisation.
+/// Use <see cref="Create"/> to obtain a fresh context per operation; dispose with <c>await using</c>.
+/// </summary>
 public static class DbFactory
 {
     private const string ConnectionString =
         "Server=WIN1164;Database=BAPeopleMgr;User Id=BAPeopleDev;Password=Developer;TrustServerCertificate=True";
 
+    /// <summary>Creates and returns a new <see cref="AppDbContext"/> instance.</summary>
+    /// <remarks>Each call returns an independent context. Callers must dispose it (<c>await using</c>).</remarks>
     public static AppDbContext Create()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -15,6 +21,10 @@ public static class DbFactory
         return new AppDbContext(options);
     }
 
+    /// <summary>
+    /// Ensures the database exists and applies all incremental schema patches.
+    /// Called once at application startup before the main window is shown.
+    /// </summary>
     public static async Task InitializeDatabaseAsync()
     {
         await using var ctx = Create();
@@ -27,6 +37,10 @@ public static class DbFactory
         await ApplySchemaUpdatesAsync(ctx);
     }
 
+    /// <summary>
+    /// Applies idempotent schema patches for databases created before a given feature was added.
+    /// Each block is safe to run on every startup — it checks existence before altering.
+    /// </summary>
     private static async Task ApplySchemaUpdatesAsync(AppDbContext ctx)
     {
         // v3: Replace template-based checklist with directly-assigned questions.

@@ -3,6 +3,10 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Dialog for re-hiring a previously separated employee, capturing a new start date and job title.
+/// Creates a new employment period and job title record.
+/// </summary>
 public class ReHirePersonForm : Form
 {
     private readonly int _personId;
@@ -11,6 +15,9 @@ public class ReHirePersonForm : Form
     private DateTimePicker _dtpHireDate = null!;
     private TextBox _txtJobTitle = null!;
 
+    /// <summary>Initialises the re-hire form for the specified person.</summary>
+    /// <param name="personId">The person being re-hired.</param>
+    /// <param name="personName">Display name shown at the top of the form.</param>
     public ReHirePersonForm(int personId, string personName)
     {
         _personId   = personId;

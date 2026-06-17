@@ -4,6 +4,10 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Dialog for creating a new action item within a 1:1 meeting.
+/// Supports @-mention autocomplete to tag other people in the description.
+/// </summary>
 public class AddActionItemForm : Form
 {
     private readonly int      _meetingId;
@@ -21,6 +25,11 @@ public class AddActionItemForm : Form
     private int                _mentionStart = -1;
     private bool               _inserting    = false;
 
+    /// <summary>Initialises the add action item form.</summary>
+    /// <param name="meetingId">The meeting this action item belongs to.</param>
+    /// <param name="personId">The direct report the action item concerns.</param>
+    /// <param name="personDisplayName">Display name shown in the banner and assignee dropdown.</param>
+    /// <param name="meetingDate">Used as the created date and default due date basis.</param>
     public AddActionItemForm(int meetingId, int personId, string personDisplayName, DateTime meetingDate)
     {
         _meetingId          = meetingId;

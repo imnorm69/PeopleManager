@@ -4,6 +4,11 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Full-screen form for conducting and recording a 1:1 meeting.
+/// Shows meeting notes tabs (Project Notes, Career Updates, Training Updates, General Notes),
+/// a checklist tab for answering assigned questions, action items, mentions, and glows/grows.
+/// </summary>
 public class MeetingForm : Form
 {
     internal static readonly Color OverdueBg = Color.FromArgb(255, 235, 235);
@@ -38,6 +43,10 @@ public class MeetingForm : Form
     private readonly List<ChecklistRow> _checklistRows = new();
     private sealed record ChecklistRow(int QuestionId, ChecklistValueType ValueType, Control AnswerControl);
 
+    /// <summary>Initialises the meeting form.</summary>
+    /// <param name="personId">The direct report this meeting is with.</param>
+    /// <param name="meetingDate">The date the meeting takes place.</param>
+    /// <param name="existingMeetingId">Pass an existing meeting ID to open a saved meeting; omit to start a new one.</param>
     public MeetingForm(int personId, DateTime meetingDate, int? existingMeetingId = null)
     {
         _personId    = personId;
@@ -404,6 +413,7 @@ public class MeetingForm : Form
         TextAlign = ContentAlignment.MiddleCenter
     };
 
+    /// <summary>Master load: fetches the person, then calls each section's loader in sequence.</summary>
     private async Task LoadAsync()
     {
         await using var ctx = DbFactory.Create();
@@ -421,6 +431,10 @@ public class MeetingForm : Form
         await LoadMentionsAsync();
     }
 
+    /// <summary>
+    /// Rebuilds the checklist tab by loading all questions assigned to this person
+    /// and populating answer controls from any existing evaluations for the current meeting.
+    /// </summary>
     private async Task LoadChecklistAsync()
     {
         _checklistRows.Clear();
@@ -533,6 +547,9 @@ public class MeetingForm : Form
         _checklistContainer.ResumeLayout(true);
     }
 
+    /// <summary>Creates the appropriate input control for the given checklist value type, pre-populated with an existing answer if available.</summary>
+    /// <param name="valueType">Determines which control type to create.</param>
+    /// <param name="existing">Previously saved answer string, or null for a blank control.</param>
     private static Control BuildAnswerControl(ChecklistValueType valueType, string? existing)
     {
         switch (valueType)
@@ -589,6 +606,7 @@ public class MeetingForm : Form
         }
     }
 
+    /// <summary>Loads saved meeting notes from the database into the corresponding tab RichTextBoxes.</summary>
     private async Task LoadNotesAsync()
     {
         if (_meetingId == null) return;
@@ -600,6 +618,7 @@ public class MeetingForm : Form
             rtb.Text = notes.FirstOrDefault(n => n.Category == cat)?.NoteText ?? "";
     }
 
+    /// <summary>Loads uncommunicated glows and grows for the person into the right-panel check lists.</summary>
     private async Task LoadGlowsGrowsAsync(AppDbContext ctx)
     {
         var uncommunicated = await ctx.GlowsGrows
@@ -630,6 +649,7 @@ public class MeetingForm : Form
         _lblGrowsHeader.Text  = $"Grows ({_grows.Count})";
     }
 
+    /// <summary>Refreshes the action items grid, applying the open/all filter.</summary>
     private async Task LoadActionItemsAsync()
     {
         await using var ctx = DbFactory.Create();
@@ -679,6 +699,7 @@ public class MeetingForm : Form
         _lblAiCount.Text = open == 0 ? "" : $"{open} open";
     }
 
+    /// <summary>Loads open action items from other meetings that @-mention this person by full name.</summary>
     private async Task LoadMentionsAsync()
     {
         if (string.IsNullOrEmpty(_personFullName)) return;
@@ -718,6 +739,7 @@ public class MeetingForm : Form
         }
     }
 
+    /// <summary>Ensures the meeting is saved, then opens the Add Action Item dialog.</summary>
     private async Task AddActionItemAsync()
     {
         var meetingId = await EnsureMeetingSavedAsync();
@@ -727,6 +749,7 @@ public class MeetingForm : Form
             await LoadActionItemsAsync();
     }
 
+    /// <summary>Opens the completion dialog for the selected action item in the meeting context.</summary>
     private async Task CompleteActionItemAsync()
     {
         if (_gridActionItems.CurrentRow?.Tag is not int id)
@@ -739,6 +762,7 @@ public class MeetingForm : Form
             await LoadActionItemsAsync();
     }
 
+    /// <summary>Prompts for confirmation and permanently deletes the selected action item.</summary>
     private async Task DeleteActionItemAsync()
     {
         if (_gridActionItems.CurrentRow?.Tag is not int id)
@@ -759,6 +783,7 @@ public class MeetingForm : Form
         await LoadActionItemsAsync();
     }
 
+    /// <summary>Saves the meeting, marks checked glows/grows as communicated, upserts notes, and saves checklist answers.</summary>
     private async Task SaveAsync()
     {
         var meetingId = await EnsureMeetingSavedAsync();
@@ -813,6 +838,8 @@ public class MeetingForm : Form
         await LoadAsync();
     }
 
+    /// <summary>Upserts one <see cref="ChecklistItemEvaluation"/> per checklist row that has an answer; removes records for cleared answers.</summary>
+    /// <param name="meetingId">The meeting to associate the evaluations with.</param>
     private async Task SaveChecklistAsync(int meetingId)
     {
         if (_checklistRows.Count == 0) return;
@@ -853,6 +880,7 @@ public class MeetingForm : Form
         await ctx.SaveChangesAsync();
     }
 
+    /// <summary>Reads the current value from an answer control and returns it as a string, or null if blank.</summary>
     private static string? GetAnswerValue(ChecklistValueType valueType, Control control) =>
         valueType switch
         {
@@ -866,6 +894,7 @@ public class MeetingForm : Form
                 control is TextBox t && !string.IsNullOrWhiteSpace(t.Text) ? t.Text.Trim() : null
         };
 
+    /// <summary>Creates a <see cref="Meeting"/> row if one does not yet exist, then returns its ID.</summary>
     private async Task<int> EnsureMeetingSavedAsync()
     {
         if (_meetingId != null) return _meetingId.Value;

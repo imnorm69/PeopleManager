@@ -4,6 +4,10 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Dialog for assigning a person to an existing or newly created project team,
+/// capturing assigned and effective dates.
+/// </summary>
 public class AddTeamAssignmentForm : Form
 {
     private readonly int _personId;
@@ -14,6 +18,8 @@ public class AddTeamAssignmentForm : Form
     private RadioButton _rbExisting = null!;
     private RadioButton _rbNew = null!;
 
+    /// <summary>Initialises the form for the specified person.</summary>
+    /// <param name="personId">The person being assigned to a team.</param>
     public AddTeamAssignmentForm(int personId)
     {
         _personId = personId;

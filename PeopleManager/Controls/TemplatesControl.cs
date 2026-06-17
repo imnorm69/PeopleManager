@@ -4,10 +4,15 @@ using PeopleManager.Forms;
 
 namespace PeopleManager.Controls;
 
+/// <summary>
+/// Checklist Questions screen for managing reusable questions and assigning them to people.
+/// Supports create, edit, delete, and assign-to-people actions.
+/// </summary>
 public class TemplatesControl : UserControl
 {
     private DataGridView _grid = null!;
 
+    /// <summary>Initialises the control, builds the UI, and starts an async data load.</summary>
     public TemplatesControl()
     {
         BuildUI();
@@ -68,6 +73,7 @@ public class TemplatesControl : UserControl
         Controls.Add(header);
     }
 
+    /// <summary>Loads all checklist questions and their assignment counts into the grid.</summary>
     private async Task LoadAsync()
     {
         await using var ctx = DbFactory.Create();
@@ -85,6 +91,7 @@ public class TemplatesControl : UserControl
         }
     }
 
+    /// <summary>Opens the question form to create a new checklist question.</summary>
     private async Task NewQuestionAsync()
     {
         using var form = new ChecklistQuestionForm(null);
@@ -92,6 +99,7 @@ public class TemplatesControl : UserControl
             await LoadAsync();
     }
 
+    /// <summary>Opens the question form to edit the selected checklist question.</summary>
     private async Task EditQuestionAsync()
     {
         if (_grid.CurrentRow?.Tag is not int id)
@@ -104,6 +112,7 @@ public class TemplatesControl : UserControl
             await LoadAsync();
     }
 
+    /// <summary>Prompts for confirmation and deletes the selected question and all its assignments.</summary>
     private async Task DeleteQuestionAsync()
     {
         if (_grid.CurrentRow?.Tag is not int id)
@@ -124,6 +133,7 @@ public class TemplatesControl : UserControl
         await LoadAsync();
     }
 
+    /// <summary>Opens the assignment dialog to assign or unassign the selected question to people.</summary>
     private async Task AssignQuestionAsync()
     {
         if (_grid.CurrentRow?.Tag is not int id)

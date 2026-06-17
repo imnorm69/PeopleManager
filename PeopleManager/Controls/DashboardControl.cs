@@ -5,17 +5,23 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Controls;
 
+/// <summary>
+/// Dashboard screen showing all open action items across every direct report,
+/// with a filter for assignee and toolbar buttons to complete or delete items.
+/// </summary>
 public class DashboardControl : UserControl
 {
     private DataGridView _grid = null!;
     private ComboBox _cboAssignee = null!;
 
+    /// <summary>Initialises the control, builds the UI, and starts an async data load.</summary>
     public DashboardControl()
     {
         BuildUI();
         _ = LoadAsync();
     }
 
+    /// <summary>Constructs and lays out all child controls.</summary>
     private void BuildUI()
     {
         BackColor = Color.FromArgb(240, 242, 245);
@@ -91,6 +97,7 @@ public class DashboardControl : UserControl
         Controls.Add(header);
     }
 
+    /// <summary>Loads open action items from the database and populates the grid.</summary>
     private async Task LoadAsync()
     {
         await using var ctx = DbFactory.Create();
@@ -163,6 +170,7 @@ public class DashboardControl : UserControl
         return btn;
     }
 
+    /// <summary>Opens the completion dialog for the currently selected action item.</summary>
     private async Task CompleteActionItemAsync()
     {
         if (_grid.CurrentRow?.Tag is not int id)
@@ -175,6 +183,7 @@ public class DashboardControl : UserControl
             await LoadAsync();
     }
 
+    /// <summary>Prompts for confirmation and permanently deletes the selected action item.</summary>
     private async Task DeleteActionItemAsync()
     {
         if (_grid.CurrentRow?.Tag is not int id)

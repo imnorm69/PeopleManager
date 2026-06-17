@@ -4,11 +4,16 @@ using PeopleManager.Forms;
 
 namespace PeopleManager.Controls;
 
+/// <summary>
+/// Meetings screen listing all 1:1 meetings with filter by person,
+/// and toolbar buttons to create new meetings or open existing ones.
+/// </summary>
 public class MeetingsControl : UserControl
 {
     private DataGridView _grid = null!;
     private ComboBox _cboPerson = null!;
 
+    /// <summary>Initialises the control, builds the UI, and starts an async data load.</summary>
     public MeetingsControl()
     {
         BuildUI();
@@ -80,6 +85,7 @@ public class MeetingsControl : UserControl
         Controls.Add(header);
     }
 
+    /// <summary>Loads people into the filter dropdown (once) and refreshes the meetings grid.</summary>
     private async Task LoadAsync()
     {
         await using var ctx = DbFactory.Create();
@@ -120,6 +126,7 @@ public class MeetingsControl : UserControl
         }
     }
 
+    /// <summary>Looks up the selected meeting and opens it in <see cref="MeetingForm"/>.</summary>
     private async Task OpenSelectedMeetingAsync()
     {
         if (_grid.CurrentRow?.Tag is not int meetingId) return;

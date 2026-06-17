@@ -3,6 +3,10 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Dialog for recording an employee separation, capturing the date, reason, and optional notes.
+/// When reason is "Other", notes are required.
+/// </summary>
 public class SeparatePersonForm : Form
 {
     private readonly int _personId;
@@ -14,6 +18,9 @@ public class SeparatePersonForm : Form
     private Label _lblNotesRequired = null!;
     private Button _btnSeparate = null!;
 
+    /// <summary>Initialises the separation form for the specified person.</summary>
+    /// <param name="personId">The person being separated.</param>
+    /// <param name="personName">Display name shown at the top of the form.</param>
     public SeparatePersonForm(int personId, string personName)
     {
         _personId   = personId;

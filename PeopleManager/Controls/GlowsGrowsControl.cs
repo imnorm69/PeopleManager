@@ -5,6 +5,10 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Controls;
 
+/// <summary>
+/// Glows &amp; Grows screen listing all recorded feedback items with filters for person, type,
+/// and communication status. Supports add, edit, and mark-as-communicated actions.
+/// </summary>
 public class GlowsGrowsControl : UserControl
 {
     private DataGridView _grid = null!;
@@ -12,6 +16,7 @@ public class GlowsGrowsControl : UserControl
     private ComboBox _cboType = null!;
     private CheckBox _chkUncommunicated = null!;
 
+    /// <summary>Initialises the control, builds the UI, and starts an async data load.</summary>
     public GlowsGrowsControl()
     {
         BuildUI();
@@ -85,6 +90,7 @@ public class GlowsGrowsControl : UserControl
         Controls.Add(header);
     }
 
+    /// <summary>Loads people into the filter dropdown (once) and refreshes the glows/grows grid.</summary>
     private async Task LoadAsync()
     {
         await using var ctx = DbFactory.Create();
@@ -130,6 +136,7 @@ public class GlowsGrowsControl : UserControl
         }
     }
 
+    /// <summary>Opens the Add Glow/Grow dialog, pre-selecting the currently filtered person if applicable.</summary>
     private async Task AddAsync()
     {
         int? preselectedPersonId = (_cboPerson.SelectedItem is PersonItem pi) ? pi.Id : null;
@@ -138,6 +145,7 @@ public class GlowsGrowsControl : UserControl
             await LoadAsync();
     }
 
+    /// <summary>Opens the Edit Glow/Grow dialog for the selected item.</summary>
     private async Task EditAsync()
     {
         if (_grid.CurrentRow?.Tag is not int id) { MessageBox.Show("Select an item first.", "No Selection"); return; }
@@ -146,6 +154,7 @@ public class GlowsGrowsControl : UserControl
             await LoadAsync();
     }
 
+    /// <summary>Sets today as the communicated date on the selected glow/grow item.</summary>
     private async Task MarkCommunicatedAsync()
     {
         if (_grid.CurrentRow?.Tag is not int id) { MessageBox.Show("Select an item first.", "No Selection"); return; }

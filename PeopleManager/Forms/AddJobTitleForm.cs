@@ -3,12 +3,17 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Dialog for adding a new job title entry to a person's title history.
+/// </summary>
 public class AddJobTitleForm : Form
 {
     private readonly int _personId;
     private TextBox _txtTitle = null!;
     private DateTimePicker _dtpDate = null!;
 
+    /// <summary>Initialises the form for the specified person.</summary>
+    /// <param name="personId">The person receiving the new title.</param>
     public AddJobTitleForm(int personId)
     {
         _personId = personId;

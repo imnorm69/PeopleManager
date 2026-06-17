@@ -3,21 +3,39 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Data;
 
+/// <summary>
+/// Entity Framework Core database context for PeopleManager.
+/// All table mappings, relationship configurations, and index definitions live here.
+/// </summary>
 public class AppDbContext : DbContext
 {
+    /// <summary>Gets or sets the People table.</summary>
     public DbSet<Person>                   People                    { get; set; }
+    /// <summary>Gets or sets the PersonEmploymentPeriods table.</summary>
     public DbSet<PersonEmploymentPeriod>   PersonEmploymentPeriods   { get; set; }
+    /// <summary>Gets or sets the PersonJobTitles table.</summary>
     public DbSet<PersonJobTitle>           PersonJobTitles           { get; set; }
+    /// <summary>Gets or sets the ProjectTeams table.</summary>
     public DbSet<ProjectTeam>              ProjectTeams              { get; set; }
+    /// <summary>Gets or sets the PersonProjectAssignments table.</summary>
     public DbSet<PersonProjectAssignment>  PersonProjectAssignments  { get; set; }
+    /// <summary>Gets or sets the GlowsGrows table.</summary>
     public DbSet<GlowGrow>                 GlowsGrows                { get; set; }
+    /// <summary>Gets or sets the Meetings table.</summary>
     public DbSet<Meeting>                  Meetings                  { get; set; }
+    /// <summary>Gets or sets the MeetingNotes table.</summary>
     public DbSet<MeetingNote>              MeetingNotes              { get; set; }
+    /// <summary>Gets or sets the ActionItems table.</summary>
     public DbSet<ActionItem>               ActionItems               { get; set; }
+    /// <summary>Gets or sets the ChecklistQuestions table.</summary>
     public DbSet<ChecklistQuestion>        ChecklistQuestions        { get; set; }
+    /// <summary>Gets or sets the PersonQuestionAssignments table.</summary>
     public DbSet<PersonQuestionAssignment> PersonQuestionAssignments { get; set; }
+    /// <summary>Gets or sets the ChecklistItemEvaluations table.</summary>
     public DbSet<ChecklistItemEvaluation>  ChecklistItemEvaluations  { get; set; }
 
+    /// <summary>Initialises a new context instance with the given options.</summary>
+    /// <param name="options">EF Core options including the connection string.</param>
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -4,6 +4,10 @@ using PeopleManager.Models;
 
 namespace PeopleManager.Forms;
 
+/// <summary>
+/// Dialog showing all active people in a grid, allowing the manager to check or uncheck
+/// each person to assign/unassign the selected checklist question and set its frequency.
+/// </summary>
 public class AssignQuestionForm : Form
 {
     private readonly int _questionId;
@@ -12,6 +16,8 @@ public class AssignQuestionForm : Form
     private record PersonRow(int PersonId, string Name, bool WasAssigned, int ExistingAssignmentId);
     private List<PersonRow> _rows = new();
 
+    /// <summary>Initialises the assignment dialog for the specified question.</summary>
+    /// <param name="questionId">The checklist question being assigned.</param>
     public AssignQuestionForm(int questionId)
     {
         _questionId = questionId;
@@ -143,6 +149,7 @@ public class AssignQuestionForm : Form
         UpdateFrequencyCell(_grid.Rows[e.RowIndex]);
     }
 
+    /// <summary>Greys out the frequency cell when the row's Assign checkbox is unchecked.</summary>
     private static void UpdateFrequencyCell(DataGridViewRow row)
     {
         bool assigned = row.Cells["Assigned"].Value is true;
