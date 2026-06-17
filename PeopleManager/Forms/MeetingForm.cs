@@ -32,6 +32,8 @@ public class MeetingForm : Form
 
     private DataGridView _gridMentions = null!;
 
+    private readonly Dictionary<MeetingNoteCategory, RichTextBox> _noteBoxes = new();
+
     public MeetingForm(int personId, DateTime meetingDate, int? existingMeetingId = null)
     {
         _personId    = personId;
@@ -51,7 +53,7 @@ public class MeetingForm : Form
         Font = new Font("Segoe UI", 14f);
         BackColor = Color.FromArgb(245, 247, 250);
 
-        Controls.Add(BuildContentPlaceholder());
+        Controls.Add(BuildNotesPanel());
         Controls.Add(BuildBottomSeparator());
         Controls.Add(BuildBottomPanel());
         Controls.Add(BuildRightSeparator());
@@ -282,23 +284,81 @@ public class MeetingForm : Form
         return page;
     }
 
-    private Panel BuildContentPlaceholder()
+    private Panel BuildNotesPanel()
     {
         var pnl = new Panel
         {
             Dock = DockStyle.Fill,
-            BackColor = Color.FromArgb(245, 247, 250),
-            Padding = new Padding(16)
+            BackColor = Color.FromArgb(235, 238, 242),
+            Padding = new Padding(8)
         };
-        pnl.Controls.Add(new Label
+
+        var tbl = new TableLayoutPanel
         {
-            Text = "Notes · Checklist\n(coming in the next iteration)",
-            ForeColor = Color.FromArgb(160, 170, 180),
-            Font = new Font("Segoe UI", 16f, FontStyle.Italic),
             Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleCenter
-        });
+            ColumnCount = 2,
+            RowCount = 2
+        };
+        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+
+        var sections = new[]
+        {
+            (MeetingNoteCategory.ProjectNotes,    "Project Notes",    Color.FromArgb(41, 128, 185)),
+            (MeetingNoteCategory.CareerUpdates,   "Career Updates",   Color.FromArgb(142, 68, 173)),
+            (MeetingNoteCategory.TrainingUpdates, "Training Updates", Color.FromArgb(22, 160, 133)),
+            (MeetingNoteCategory.GlowsGrows,      "General Notes",    Color.FromArgb(211, 84, 0)),
+        };
+
+        int col = 0, row = 0;
+        foreach (var (cat, title, color) in sections)
+        {
+            tbl.Controls.Add(BuildNoteSection(cat, title, color), col, row);
+            col++;
+            if (col > 1) { col = 0; row++; }
+        }
+
+        pnl.Controls.Add(tbl);
         return pnl;
+    }
+
+    private Panel BuildNoteSection(MeetingNoteCategory category, string title, Color headerColor)
+    {
+        var outer = new Panel
+        {
+            Dock = DockStyle.Fill,
+            Margin = new Padding(4),
+            BackColor = Color.White
+        };
+
+        var hdr = new Label
+        {
+            Text = title,
+            Dock = DockStyle.Top,
+            Height = 32,
+            BackColor = headerColor,
+            ForeColor = Color.White,
+            Font = new Font("Segoe UI", 13f, FontStyle.Bold),
+            TextAlign = ContentAlignment.MiddleLeft,
+            Padding = new Padding(8, 0, 0, 0)
+        };
+
+        var rtb = new RichTextBox
+        {
+            Dock = DockStyle.Fill,
+            BorderStyle = BorderStyle.None,
+            ScrollBars = RichTextBoxScrollBars.Vertical,
+            Font = new Font("Segoe UI", 13f),
+            BackColor = Color.White,
+            Padding = new Padding(6)
+        };
+        _noteBoxes[category] = rtb;
+
+        outer.Controls.Add(rtb);
+        outer.Controls.Add(hdr);
+        return outer;
     }
 
     private async Task LoadAsync()
@@ -312,8 +372,20 @@ public class MeetingForm : Form
         _lblName.Text      = person.DisplayName;
 
         await LoadGlowsGrowsAsync(ctx);
+        await LoadNotesAsync();
         await LoadActionItemsAsync();
         await LoadMentionsAsync();
+    }
+
+    private async Task LoadNotesAsync()
+    {
+        if (_meetingId == null) return;
+        await using var ctx = DbFactory.Create();
+        var notes = await ctx.MeetingNotes
+            .Where(n => n.MeetingId == _meetingId.Value)
+            .ToListAsync();
+        foreach (var (cat, rtb) in _noteBoxes)
+            rtb.Text = notes.FirstOrDefault(n => n.Category == cat)?.NoteText ?? "";
     }
 
     private async Task LoadGlowsGrowsAsync(AppDbContext ctx)
@@ -477,10 +549,11 @@ public class MeetingForm : Form
 
     private async Task SaveAsync()
     {
-        await EnsureMeetingSavedAsync();
+        var meetingId = await EnsureMeetingSavedAsync();
 
         await using var ctx = DbFactory.Create();
 
+        // Glows/Grows — mark checked ones as communicated
         var checkedIds = new List<int>();
         foreach (int i in _clbGlows.CheckedIndices) checkedIds.Add(_glows[i].GlowGrowId);
         foreach (int i in _clbGrows.CheckedIndices)  checkedIds.Add(_grows[i].GlowGrowId);
@@ -492,8 +565,36 @@ public class MeetingForm : Form
                 .ToListAsync();
             foreach (var e in entities)
                 e.CommunicatedDate = _meetingDate;
-            await ctx.SaveChangesAsync();
         }
+
+        // Notes — upsert one record per category
+        var existingNotes = await ctx.MeetingNotes
+            .Where(n => n.MeetingId == meetingId)
+            .ToListAsync();
+
+        foreach (var (cat, rtb) in _noteBoxes)
+        {
+            var text     = rtb.Text.Trim();
+            var existing = existingNotes.FirstOrDefault(n => n.Category == cat);
+            if (existing != null)
+            {
+                if (string.IsNullOrWhiteSpace(text))
+                    ctx.MeetingNotes.Remove(existing);
+                else
+                    existing.NoteText = text;
+            }
+            else if (!string.IsNullOrWhiteSpace(text))
+            {
+                ctx.MeetingNotes.Add(new MeetingNote
+                {
+                    MeetingId = meetingId,
+                    Category  = cat,
+                    NoteText  = text
+                });
+            }
+        }
+
+        await ctx.SaveChangesAsync();
 
         MessageBox.Show("Meeting saved.", "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
         await LoadAsync();
