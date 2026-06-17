@@ -13,7 +13,7 @@ public enum MeetingNoteCategory
 
 public enum ActionItemAssignee { Me, Person }
 
-public enum ChecklistValueType { YesNo, Integer, Text, Percentage }
+public enum ChecklistValueType { YesNo, Integer, Text, Percentage, Date }
 
 public enum CheckFrequency { Weekly, BiWeekly, Monthly, Quarterly, SemiAnnual, Annual }
 

@@ -34,6 +34,10 @@ public class MeetingForm : Form
 
     private readonly Dictionary<MeetingNoteCategory, RichTextBox> _noteBoxes = new();
 
+    private Panel _checklistContainer = null!;
+    private readonly List<ChecklistRow> _checklistRows = new();
+    private sealed record ChecklistRow(int QuestionId, ChecklistValueType ValueType, Control AnswerControl);
+
     public MeetingForm(int personId, DateTime meetingDate, int? existingMeetingId = null)
     {
         _personId    = personId;
@@ -53,7 +57,7 @@ public class MeetingForm : Form
         Font = new Font("Segoe UI", 14f);
         BackColor = Color.FromArgb(245, 247, 250);
 
-        Controls.Add(BuildNotesPanel());
+        Controls.Add(BuildNotesTabs());
         Controls.Add(BuildBottomSeparator());
         Controls.Add(BuildBottomPanel());
         Controls.Add(BuildRightSeparator());
@@ -284,82 +288,121 @@ public class MeetingForm : Form
         return page;
     }
 
-    private Panel BuildNotesPanel()
+    private Control BuildNotesTabs()
     {
-        var pnl = new Panel
+        var tabDefs = new (string Title, MeetingNoteCategory? Cat, Color Color)[]
         {
-            Dock = DockStyle.Fill,
-            BackColor = Color.FromArgb(235, 238, 242),
-            Padding = new Padding(8)
+            ("Project Notes",    MeetingNoteCategory.ProjectNotes,    Color.FromArgb(41,  128, 185)),
+            ("Career Updates",   MeetingNoteCategory.CareerUpdates,   Color.FromArgb(142, 68,  173)),
+            ("Training Updates", MeetingNoteCategory.TrainingUpdates, Color.FromArgb(22,  160, 133)),
+            ("General Notes",    MeetingNoteCategory.GlowsGrows,      Color.FromArgb(211, 84,  0)),
+            ("Checklist",        null,                                Color.FromArgb(52,  73,  94)),
         };
 
-        var tbl = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            ColumnCount = 2,
-            RowCount = 2
-        };
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+        var colors = tabDefs.Select(t => t.Color).ToArray();
 
-        var sections = new[]
+        var tabs = new TabControl
         {
-            (MeetingNoteCategory.ProjectNotes,    "Project Notes",    Color.FromArgb(41, 128, 185)),
-            (MeetingNoteCategory.CareerUpdates,   "Career Updates",   Color.FromArgb(142, 68, 173)),
-            (MeetingNoteCategory.TrainingUpdates, "Training Updates", Color.FromArgb(22, 160, 133)),
-            (MeetingNoteCategory.GlowsGrows,      "General Notes",    Color.FromArgb(211, 84, 0)),
+            Dock     = DockStyle.Fill,
+            DrawMode = TabDrawMode.OwnerDrawFixed,
+            SizeMode = TabSizeMode.Fixed,
+            ItemSize = new Size(240, 40),
+            Font     = new Font("Segoe UI", 13f, FontStyle.Bold),
+            Padding  = new Point(0, 4)
         };
 
-        int col = 0, row = 0;
-        foreach (var (cat, title, color) in sections)
+        foreach (var (title, cat, _) in tabDefs)
         {
-            tbl.Controls.Add(BuildNoteSection(cat, title, color), col, row);
-            col++;
-            if (col > 1) { col = 0; row++; }
+            var page = new TabPage(title) { BackColor = Color.White, UseVisualStyleBackColor = false };
+            if (cat.HasValue)
+            {
+                var rtb = new RichTextBox
+                {
+                    Dock        = DockStyle.Fill,
+                    BorderStyle = BorderStyle.None,
+                    ScrollBars  = RichTextBoxScrollBars.Vertical,
+                    Font        = new Font("Segoe UI", 13f),
+                    BackColor   = Color.White,
+                    Padding     = new Padding(10)
+                };
+                _noteBoxes[cat.Value] = rtb;
+                page.Controls.Add(rtb);
+            }
+            else
+            {
+                page.Controls.Add(BuildChecklistTab());
+            }
+            tabs.TabPages.Add(page);
         }
 
-        pnl.Controls.Add(tbl);
-        return pnl;
+        tabs.DrawItem += (sender, e) =>
+        {
+            var tc         = (TabControl)sender!;
+            var isSelected = e.Index == tc.SelectedIndex;
+            var c          = colors[e.Index];
+            var bgColor    = isSelected ? c
+                : Color.FromArgb((int)(c.R * 0.6f), (int)(c.G * 0.6f), (int)(c.B * 0.6f));
+
+            using var bg   = new SolidBrush(bgColor);
+            e.Graphics.FillRectangle(bg, e.Bounds);
+
+            using var fg   = new SolidBrush(Color.White);
+            var style      = isSelected ? FontStyle.Bold : FontStyle.Regular;
+            using var font = new Font(tabs.Font.FontFamily, tabs.Font.Size, style);
+            var sf         = new StringFormat
+            {
+                Alignment     = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center,
+                Trimming      = StringTrimming.EllipsisCharacter
+            };
+            e.Graphics.DrawString(tc.TabPages[e.Index].Text, font, fg, (RectangleF)e.Bounds, sf);
+        };
+
+        tabs.SelectedIndexChanged += (_, _) => tabs.Invalidate();
+
+        return tabs;
     }
 
-    private Panel BuildNoteSection(MeetingNoteCategory category, string title, Color headerColor)
+    private Panel BuildChecklistTab()
     {
-        var outer = new Panel
+        var outer = new Panel { Dock = DockStyle.Fill, BackColor = Color.White };
+
+        var hdr = new Panel
         {
-            Dock = DockStyle.Fill,
-            Margin = new Padding(4),
-            BackColor = Color.White
+            Dock      = DockStyle.Top,
+            Height    = 40,
+            BackColor = Color.FromArgb(52, 73, 94)
+        };
+        var hdrTbl = new TableLayoutPanel { Dock = DockStyle.Fill };
+        hdrTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        hdrTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130));
+        hdrTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 260));
+        hdrTbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        hdrTbl.Controls.Add(MakeHdrLabel("Question"),  0, 0);
+        hdrTbl.Controls.Add(MakeHdrLabel("Frequency"), 1, 0);
+        hdrTbl.Controls.Add(MakeHdrLabel("Answer"),    2, 0);
+        hdr.Controls.Add(hdrTbl);
+
+        _checklistContainer = new Panel
+        {
+            Dock        = DockStyle.Fill,
+            AutoScroll  = true,
+            BackColor   = Color.White
         };
 
-        var hdr = new Label
-        {
-            Text = title,
-            Dock = DockStyle.Top,
-            Height = 32,
-            BackColor = headerColor,
-            ForeColor = Color.White,
-            Font = new Font("Segoe UI", 13f, FontStyle.Bold),
-            TextAlign = ContentAlignment.MiddleLeft,
-            Padding = new Padding(8, 0, 0, 0)
-        };
-
-        var rtb = new RichTextBox
-        {
-            Dock = DockStyle.Fill,
-            BorderStyle = BorderStyle.None,
-            ScrollBars = RichTextBoxScrollBars.Vertical,
-            Font = new Font("Segoe UI", 13f),
-            BackColor = Color.White,
-            Padding = new Padding(6)
-        };
-        _noteBoxes[category] = rtb;
-
-        outer.Controls.Add(rtb);
+        outer.Controls.Add(_checklistContainer);
         outer.Controls.Add(hdr);
         return outer;
     }
+
+    private static Label MakeHdrLabel(string text) => new()
+    {
+        Text      = text,
+        ForeColor = Color.White,
+        Font      = new Font("Segoe UI", 12f, FontStyle.Bold),
+        Dock      = DockStyle.Fill,
+        TextAlign = ContentAlignment.MiddleCenter
+    };
 
     private async Task LoadAsync()
     {
@@ -373,8 +416,177 @@ public class MeetingForm : Form
 
         await LoadGlowsGrowsAsync(ctx);
         await LoadNotesAsync();
+        await LoadChecklistAsync();
         await LoadActionItemsAsync();
         await LoadMentionsAsync();
+    }
+
+    private async Task LoadChecklistAsync()
+    {
+        _checklistRows.Clear();
+        _checklistContainer.SuspendLayout();
+        _checklistContainer.Controls.Clear();
+
+        await using var ctx = DbFactory.Create();
+
+        var assignments = await ctx.PersonQuestionAssignments
+            .Include(a => a.Question)
+            .Where(a => a.PersonId == _personId)
+            .OrderBy(a => a.Question.SortOrder)
+            .ThenBy(a => a.Question.Description)
+            .ToListAsync();
+
+        if (assignments.Count == 0)
+        {
+            _checklistContainer.Controls.Add(new Label
+            {
+                Text      = "No checklist questions are assigned to this person.\nGo to Checklist Questions to add and assign questions.",
+                ForeColor = Color.FromArgb(150, 150, 150),
+                Font      = new Font("Segoe UI", 13f, FontStyle.Italic),
+                Dock      = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter
+            });
+            _checklistContainer.ResumeLayout(true);
+            return;
+        }
+
+        // Load any answers recorded for this specific meeting
+        var existingValues = new Dictionary<int, string?>();
+        if (_meetingId.HasValue)
+        {
+            var evals = await ctx.ChecklistItemEvaluations
+                .Where(e => e.PersonId == _personId && e.MeetingId == _meetingId.Value)
+                .ToListAsync();
+            foreach (var ev in evals)
+                existingValues[ev.QuestionId] = ev.Value;
+        }
+
+        // Build rows — must add in reverse because DockStyle.Top inserts at the visual top
+        var rows = new List<Panel>();
+        foreach (var a in assignments)
+        {
+            var q       = a.Question;
+            var rowH    = q.ValueType == ChecklistValueType.Text ? 72 : 54;
+            var rowPnl  = new Panel
+            {
+                Dock      = DockStyle.Top,
+                Height    = rowH,
+                BackColor = Color.White,
+                Padding   = new Padding(6, 4, 8, 4)
+            };
+            rowPnl.Paint += (s, e) =>
+            {
+                using var pen = new Pen(Color.FromArgb(220, 225, 230));
+                var p = (Panel)s!;
+                e.Graphics.DrawLine(pen, 0, p.Height - 1, p.Width, p.Height - 1);
+            };
+
+            var tbl = new TableLayoutPanel { Dock = DockStyle.Fill };
+            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130));
+            tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 260));
+            tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+            var lblQ = new Label
+            {
+                Text      = q.Description,
+                Dock      = DockStyle.Fill,
+                Font      = new Font("Segoe UI", 13f),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            var freqText = a.Frequency switch
+            {
+                CheckFrequency.Weekly     => "Weekly",
+                CheckFrequency.BiWeekly   => "Bi-Weekly",
+                CheckFrequency.Monthly    => "Monthly",
+                CheckFrequency.Quarterly  => "Quarterly",
+                CheckFrequency.SemiAnnual => "Semi-Annual",
+                CheckFrequency.Annual     => "Annual",
+                _                         => ""
+            };
+            var lblFreq = new Label
+            {
+                Text      = freqText,
+                Dock      = DockStyle.Fill,
+                Font      = new Font("Segoe UI", 11f, FontStyle.Italic),
+                ForeColor = Color.FromArgb(120, 120, 120),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+
+            existingValues.TryGetValue(q.QuestionId, out var existing);
+            var answerCtrl = BuildAnswerControl(q.ValueType, existing);
+            answerCtrl.Dock = DockStyle.Fill;
+
+            tbl.Controls.Add(lblQ,       0, 0);
+            tbl.Controls.Add(lblFreq,    1, 0);
+            tbl.Controls.Add(answerCtrl, 2, 0);
+            rowPnl.Controls.Add(tbl);
+
+            _checklistRows.Add(new ChecklistRow(q.QuestionId, q.ValueType, answerCtrl));
+            rows.Add(rowPnl);
+        }
+
+        for (int i = rows.Count - 1; i >= 0; i--)
+            _checklistContainer.Controls.Add(rows[i]);
+
+        _checklistContainer.ResumeLayout(true);
+    }
+
+    private static Control BuildAnswerControl(ChecklistValueType valueType, string? existing)
+    {
+        switch (valueType)
+        {
+            case ChecklistValueType.YesNo:
+                var cbo = new ComboBox
+                {
+                    DropDownStyle = ComboBoxStyle.DropDownList,
+                    Font          = new Font("Segoe UI", 13f)
+                };
+                cbo.Items.AddRange(new object[] { "", "Yes", "No" });
+                cbo.SelectedIndex = existing == "Yes" ? 1 : existing == "No" ? 2 : 0;
+                return cbo;
+
+            case ChecklistValueType.Integer:
+                var nudInt = new NumericUpDown
+                {
+                    DecimalPlaces = 0,
+                    Minimum       = -999999,
+                    Maximum       = 999999,
+                    Font          = new Font("Segoe UI", 13f)
+                };
+                if (int.TryParse(existing, out var iv)) nudInt.Value = iv;
+                return nudInt;
+
+            case ChecklistValueType.Percentage:
+                var nudPct = new NumericUpDown
+                {
+                    DecimalPlaces = 0,
+                    Minimum       = 0,
+                    Maximum       = 100,
+                    Font          = new Font("Segoe UI", 13f)
+                };
+                if (int.TryParse(existing, out var pv)) nudPct.Value = pv;
+                return nudPct;
+
+            case ChecklistValueType.Date:
+                var dtp = new DateTimePicker
+                {
+                    Format      = DateTimePickerFormat.Short,
+                    Font        = new Font("Segoe UI", 13f),
+                    ShowCheckBox = true,
+                    Checked     = existing != null
+                };
+                if (DateTime.TryParse(existing, out var dv)) dtp.Value = dv;
+                return dtp;
+
+            default: // Text
+                return new TextBox
+                {
+                    Font  = new Font("Segoe UI", 13f),
+                    Text  = existing ?? ""
+                };
+        }
     }
 
     private async Task LoadNotesAsync()
@@ -595,10 +807,64 @@ public class MeetingForm : Form
         }
 
         await ctx.SaveChangesAsync();
+        await SaveChecklistAsync(meetingId);
 
         MessageBox.Show("Meeting saved.", "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
         await LoadAsync();
     }
+
+    private async Task SaveChecklistAsync(int meetingId)
+    {
+        if (_checklistRows.Count == 0) return;
+
+        await using var ctx = DbFactory.Create();
+        var qIds    = _checklistRows.Select(r => r.QuestionId).ToList();
+        var existing = await ctx.ChecklistItemEvaluations
+            .Where(e => e.PersonId == _personId &&
+                        e.MeetingId == meetingId &&
+                        qIds.Contains(e.QuestionId))
+            .ToListAsync();
+
+        foreach (var row in _checklistRows)
+        {
+            var value = GetAnswerValue(row.ValueType, row.AnswerControl);
+            var eval  = existing.FirstOrDefault(e => e.QuestionId == row.QuestionId);
+
+            if (eval != null)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    ctx.ChecklistItemEvaluations.Remove(eval);
+                else
+                    eval.Value = value;
+            }
+            else if (!string.IsNullOrWhiteSpace(value))
+            {
+                ctx.ChecklistItemEvaluations.Add(new ChecklistItemEvaluation
+                {
+                    PersonId      = _personId,
+                    QuestionId    = row.QuestionId,
+                    MeetingId     = meetingId,
+                    EvaluatedDate = _meetingDate.Date,
+                    Value         = value
+                });
+            }
+        }
+
+        await ctx.SaveChangesAsync();
+    }
+
+    private static string? GetAnswerValue(ChecklistValueType valueType, Control control) =>
+        valueType switch
+        {
+            ChecklistValueType.YesNo =>
+                control is ComboBox c && c.SelectedIndex > 0 ? c.SelectedItem?.ToString() : null,
+            ChecklistValueType.Integer or ChecklistValueType.Percentage =>
+                control is NumericUpDown n ? n.Value.ToString() : null,
+            ChecklistValueType.Date =>
+                control is DateTimePicker d && d.Checked ? d.Value.Date.ToShortDateString() : null,
+            _ =>
+                control is TextBox t && !string.IsNullOrWhiteSpace(t.Text) ? t.Text.Trim() : null
+        };
 
     private async Task<int> EnsureMeetingSavedAsync()
     {
