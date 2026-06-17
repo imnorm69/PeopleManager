@@ -44,8 +44,8 @@ public class MeetingForm : Form
     private void BuildUI()
     {
         Text = "1:1 Meeting";
-        Size = new Size(1580, 1080);
-        MinimumSize = new Size(1100, 740);
+        Size = new Size(1800, 860);
+        MinimumSize = new Size(1300, 680);
         FormBorderStyle = FormBorderStyle.Sizable;
         StartPosition = FormStartPosition.CenterParent;
         Font = new Font("Segoe UI", 14f);

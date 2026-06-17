@@ -56,8 +56,7 @@ public class MeetingsControl : UserControl
         var btnNew  = MakeButton("+ New Meeting", Color.FromArgb(39, 174, 96));
         var btnOpen = MakeButton("Open",          Color.FromArgb(41, 128, 185));
 
-        btnOpen.Enabled = false;
-        btnNew.Click += async (_, _) =>
+        btnNew.Click  += async (_, _) =>
         {
             using var dlg = new NewMeetingDialog();
             if (dlg.ShowDialog() != DialogResult.OK) return;
@@ -65,12 +64,14 @@ public class MeetingsControl : UserControl
             form.ShowDialog();
             await LoadAsync();
         };
+        btnOpen.Click += async (_, _) => await OpenSelectedMeetingAsync();
 
         toolBar.Controls.AddRange(new Control[] { _cboPerson, btnNew, btnOpen });
         header.Controls.Add(toolBar);
         header.Controls.Add(lblTitle);
 
         _grid = BuildGrid();
+        _grid.CellDoubleClick += async (_, _) => await OpenSelectedMeetingAsync();
 
         var wrapper = new Panel { Dock = DockStyle.Fill, Padding = new Padding(16) };
         wrapper.Controls.Add(_grid);
@@ -117,6 +118,17 @@ public class MeetingsControl : UserControl
             );
             _grid.Rows[^1].Tag = m.MeetingId;
         }
+    }
+
+    private async Task OpenSelectedMeetingAsync()
+    {
+        if (_grid.CurrentRow?.Tag is not int meetingId) return;
+        await using var ctx = DbFactory.Create();
+        var meeting = await ctx.Meetings.FindAsync(meetingId);
+        if (meeting == null) return;
+        using var form = new MeetingForm(meeting.PersonId, meeting.MeetingDate, meetingId);
+        form.ShowDialog();
+        await LoadAsync();
     }
 
     private static Button MakeButton(string text, Color back)
