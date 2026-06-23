@@ -47,17 +47,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ChecklistQuestion>().HasKey(q => q.QuestionId);
         modelBuilder.Entity<ChecklistItemEvaluation>().HasKey(e => e.EvaluationId);
 
-        // ── nvarchar(max) columns ────────────────────────────────────────────────
-        modelBuilder.Entity<MeetingNote>()
-            .Property(n => n.NoteText).HasColumnType("nvarchar(max)");
-        modelBuilder.Entity<GlowGrow>()
-            .Property(g => g.Note).HasColumnType("nvarchar(max)");
-        modelBuilder.Entity<ActionItem>()
-            .Property(a => a.Description).HasColumnType("nvarchar(max)");
-        modelBuilder.Entity<ActionItem>()
-            .Property(a => a.CompletionNotes).HasColumnType("nvarchar(max)");
-        modelBuilder.Entity<PersonEmploymentPeriod>()
-            .Property(p => p.SeparationNotes).HasColumnType("nvarchar(max)");
 
         // ── ActionItem — two Meeting FKs, no cascade to avoid cycles ────────────
         modelBuilder.Entity<ActionItem>()
