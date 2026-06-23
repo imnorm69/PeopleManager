@@ -8,105 +8,25 @@ namespace PeopleManager.Forms;
 /// Dialog showing all active people in a grid, allowing the manager to check or uncheck
 /// each person to assign/unassign the selected checklist question and set its frequency.
 /// </summary>
-public class AssignQuestionForm : Form
+public partial class AssignQuestionForm : Form
 {
     private readonly int _questionId;
-    private DataGridView _grid = null!;
 
     private record PersonRow(int PersonId, string Name, bool WasAssigned, int ExistingAssignmentId);
     private List<PersonRow> _rows = new();
 
     /// <summary>Initialises the assignment dialog for the specified question.</summary>
     /// <param name="questionId">The checklist question being assigned.</param>
+    public AssignQuestionForm() : this(0) { }
+
     public AssignQuestionForm(int questionId)
     {
         _questionId = questionId;
-        BuildUI();
-        _ = LoadAsync();
-    }
-
-    private void BuildUI()
-    {
-        Text = "Assign Question to People";
-        Size = new Size(820, 660);
-        MinimumSize = new Size(680, 510);
-        FormBorderStyle = FormBorderStyle.Sizable;
-        StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 14f);
-        BackColor = Color.White;
-
-        var infoLabel = new Label
-        {
-            Text = "Check each person to assign this question. Set the review frequency per person.",
-            Dock = DockStyle.Top,
-            Height = 42,
-            Padding = new Padding(8, 9, 0, 0),
-            ForeColor = Color.FromArgb(80, 80, 80),
-            Font = new Font("Segoe UI", 13f, FontStyle.Italic)
-        };
-
-        _grid = new DataGridView
-        {
-            Dock = DockStyle.Fill,
-            RowHeadersVisible = false,
-            MultiSelect = false,
-            BorderStyle = BorderStyle.None,
-            BackgroundColor = Color.White,
-            GridColor = Color.FromArgb(220, 230, 240)
-        };
-        _grid.EnableHeadersVisualStyles = false;
-        _grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(30, 58, 95);
-        _grid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-        _grid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 14f, FontStyle.Bold);
-        _grid.ColumnHeadersHeight = 45;
-        _grid.RowTemplate.Height  = 42;
-        _grid.DefaultCellStyle.Font = new Font("Segoe UI", 14f);
-        _grid.AllowUserToAddRows = false;
-        _grid.AllowUserToDeleteRows = false;
-
-        var colAssigned = new DataGridViewCheckBoxColumn
-        {
-            HeaderText = "Assign",
-            Width = 90,
-            Name = "Assigned",
-            TrueValue = true,
-            FalseValue = false
-        };
-        var colName = new DataGridViewTextBoxColumn
-        {
-            HeaderText = "Person",
-            Width = 300,
-            Name = "PersonName",
-            ReadOnly = true,
-            AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
-        };
-        var colFreq = new DataGridViewComboBoxColumn
-        {
-            HeaderText = "Frequency",
-            Width = 210,
-            Name = "Frequency",
-            DataSource = Enum.GetValues<CheckFrequency>().Select(f => f.ToString()).ToArray(),
-            DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox
-        };
-        _grid.Columns.AddRange(colAssigned, colName, colFreq);
-
-        _grid.CellValueChanged += OnCellValueChanged;
-        _grid.CurrentCellDirtyStateChanged += (_, _) =>
-        {
-            if (_grid.IsCurrentCellDirty) _grid.CommitEdit(DataGridViewDataErrorContexts.Commit);
-        };
-
-        var btnPanel = new Panel { Dock = DockStyle.Bottom, Height = 70, BackColor = Color.White, Padding = new Padding(8, 12, 8, 12) };
-        var btnSave   = new Button { Text = "Save",   Width = 135, Height = 45, Dock = DockStyle.Right, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(41, 128, 185), ForeColor = Color.White, DialogResult = DialogResult.OK };
-        var btnCancel = new Button { Text = "Cancel", Width = 120, Height = 45, Dock = DockStyle.Right, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(127, 140, 141), ForeColor = Color.White, DialogResult = DialogResult.Cancel };
-        btnSave.FlatAppearance.BorderSize = 0; btnCancel.FlatAppearance.BorderSize = 0;
-        btnSave.Click += async (_, _) => await SaveAsync();
-        btnPanel.Controls.Add(btnSave);
-        btnPanel.Controls.Add(btnCancel);
-
-        Controls.Add(_grid);
-        Controls.Add(infoLabel);
-        Controls.Add(btnPanel);
+        InitializeComponent();
+        if (_grid.Columns["Frequency"] is DataGridViewComboBoxColumn colFreq)
+            colFreq.DataSource = Enum.GetValues<CheckFrequency>().Select(f => f.ToString()).ToArray();
+        if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
+            _ = LoadAsync();
     }
 
     private async Task LoadAsync()
@@ -193,4 +113,10 @@ public class AssignQuestionForm : Form
 
         await ctx.SaveChangesAsync();
     }
+
+    private void Grid_CurrentCellDirtyStateChanged(object? sender, EventArgs e)
+    {
+        if (_grid.IsCurrentCellDirty) _grid.CommitEdit(DataGridViewDataErrorContexts.Commit);
+    }
+    private async void BtnSave_Click(object? sender, EventArgs e) { await SaveAsync(); }
 }

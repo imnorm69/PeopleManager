@@ -18,7 +18,8 @@ net9.0
 ## Key Conventions
 - Use async/await throughout (async void event handlers, async Task for logic)
 - DbFactory.Create() returns a fresh DbContext per operation — dispose with `await using`
-- New forms/controls go in Forms/ or Controls/ — no Designer.cs files, all layout in code
+- All Forms use the standard WinForms partial-class pattern: FormName.cs (business logic) + FormName.Designer.cs (InitializeComponent)
+- All layout belongs in InitializeComponent() in Designer.cs — never in a BuildUI() method
 - DataGridView rows store their entity PK in row.Tag
 
 ## Project Structure

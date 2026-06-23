@@ -7,79 +7,17 @@ namespace PeopleManager.Forms;
 /// Small dialog for picking a person and date before opening a new 1:1 meeting.
 /// Exposes the selected values via <see cref="SelectedPersonId"/> and <see cref="MeetingDate"/>.
 /// </summary>
-public class NewMeetingDialog : Form
+public partial class NewMeetingDialog : Form
 {
     public int      SelectedPersonId   { get; private set; }
     public string   SelectedPersonName { get; private set; } = "";
     public DateTime MeetingDate        { get; private set; } = DateTime.Today;
 
-    private ComboBox        _cboPerson = null!;
-    private DateTimePicker  _dtp       = null!;
-
     public NewMeetingDialog()
     {
-        BuildUI();
-        _ = LoadPeopleAsync();
-    }
-
-    private void BuildUI()
-    {
-        Text = "New 1:1 Meeting";
-        Size = new Size(520, 260);
-        FormBorderStyle = FormBorderStyle.FixedDialog;
-        MaximizeBox = false;
-        MinimizeBox = false;
-        StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 14f);
-        BackColor = Color.White;
-
-        var layout = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            Padding = new Padding(16),
-            ColumnCount = 2,
-            RowCount = 3
-        };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
-
-        _cboPerson = new ComboBox
-        {
-            DropDownStyle = ComboBoxStyle.DropDownList,
-            Dock = DockStyle.Fill
-        };
-        _dtp = new DateTimePicker
-        {
-            Dock = DockStyle.Fill,
-            Format = DateTimePickerFormat.Short,
-            Value = DateTime.Today
-        };
-
-        layout.Controls.Add(MkLabel("Person *"), 0, 0);
-        layout.Controls.Add(_cboPerson, 1, 0);
-        layout.Controls.Add(MkLabel("Date *"), 0, 1);
-        layout.Controls.Add(_dtp, 1, 1);
-
-        var btnPanel = new FlowLayoutPanel
-        {
-            FlowDirection = FlowDirection.RightToLeft,
-            Dock = DockStyle.Fill,
-            Padding = new Padding(0, 6, 0, 0)
-        };
-        layout.SetColumnSpan(btnPanel, 2);
-
-        var btnOK     = new Button { Text = "OK",     Width = 120, DialogResult = DialogResult.OK };
-        var btnCancel = new Button { Text = "Cancel", Width = 120, DialogResult = DialogResult.Cancel };
-        btnOK.Click += (_, _) => ValidateAndAccept();
-        btnPanel.Controls.AddRange(new Control[] { btnCancel, btnOK });
-        layout.Controls.Add(btnPanel, 0, 2);
-
-        AcceptButton = btnOK;
-        CancelButton = btnCancel;
-        Controls.Add(layout);
+        InitializeComponent();
+        if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
+            _ = LoadPeopleAsync();
     }
 
     private async Task LoadPeopleAsync()
@@ -108,12 +46,7 @@ public class NewMeetingDialog : Form
         MeetingDate        = _dtp.Value.Date;
     }
 
-    private static Label MkLabel(string text) => new()
-    {
-        Text = text,
-        TextAlign = ContentAlignment.MiddleRight,
-        Dock = DockStyle.Fill
-    };
-
     private record PersonItem(int Id, string Name) { public override string ToString() => Name; }
+
+    private void BtnOK_Click(object? sender, EventArgs e) => ValidateAndAccept();
 }

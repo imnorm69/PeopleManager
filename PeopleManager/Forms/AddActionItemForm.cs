@@ -8,16 +8,12 @@ namespace PeopleManager.Forms;
 /// Dialog for creating a new action item within a 1:1 meeting.
 /// Supports @-mention autocomplete to tag other people in the description.
 /// </summary>
-public class AddActionItemForm : Form
+public partial class AddActionItemForm : Form
 {
     private readonly int      _meetingId;
     private readonly int      _personId;
     private readonly string   _personDisplayName;
     private readonly DateTime _meetingDate;
-
-    private RichTextBox    _rtbDesc     = null!;
-    private ComboBox       _cboAssignee = null!;
-    private DateTimePicker _dtpDue      = null!;
 
     private List<(int Id, string FullName)> _mentionPeople = new();
     private ToolStripDropDown? _mentionDrop;
@@ -30,103 +26,23 @@ public class AddActionItemForm : Form
     /// <param name="personId">The direct report the action item concerns.</param>
     /// <param name="personDisplayName">Display name shown in the banner and assignee dropdown.</param>
     /// <param name="meetingDate">Used as the created date and default due date basis.</param>
+    public AddActionItemForm() : this(0, 0, "", DateTime.Today) { }
+
     public AddActionItemForm(int meetingId, int personId, string personDisplayName, DateTime meetingDate)
     {
-        _meetingId          = meetingId;
-        _personId           = personId;
-        _personDisplayName  = personDisplayName;
-        _meetingDate        = meetingDate;
-        BuildUI();
-        _ = LoadPeopleAsync();
-    }
-
-    private void BuildUI()
-    {
-        Text = "Add Action Item";
-        Size = new Size(740, 495);
-        MinimumSize = new Size(620, 420);
-        FormBorderStyle = FormBorderStyle.Sizable;
-        MaximizeBox = false;
-        MinimizeBox = false;
-        StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 14f);
-        BackColor = Color.White;
-
-        var banner = new Panel
-        {
-            Dock = DockStyle.Top,
-            Height = 45,
-            BackColor = Color.FromArgb(30, 58, 95),
-            Padding = new Padding(12, 0, 0, 0)
-        };
-        banner.Controls.Add(new Label
-        {
-            Text = $"Meeting with {_personDisplayName}  ·  {_meetingDate:MMMM d, yyyy}",
-            ForeColor = Color.White,
-            Font = new Font("Segoe UI", 13f),
-            Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleLeft
-        });
-
-        var layout = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            Padding = new Padding(14),
-            ColumnCount = 2,
-            RowCount = 4
-        };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 135));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100)); // description
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51)); // assigned to
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51)); // due date
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60)); // buttons
-
-        _rtbDesc = new RichTextBox
-        {
-            Dock = DockStyle.Fill,
-            ScrollBars = RichTextBoxScrollBars.Vertical,
-            Font = new Font("Segoe UI", 14f),
-            AcceptsTab = false
-        };
-        _rtbDesc.KeyDown     += OnDescKeyDown;
-        _rtbDesc.TextChanged += OnDescTextChanged;
-        _rtbDesc.Leave       += (_, _) => _mentionDrop?.Close();
-
-        layout.Controls.Add(new Label { Text = "Description *", TextAlign = ContentAlignment.TopRight, Dock = DockStyle.Fill, Padding = new Padding(0, 5, 4, 0) }, 0, 0);
-        layout.Controls.Add(_rtbDesc, 1, 0);
-
-        _cboAssignee = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill };
+        _meetingId         = meetingId;
+        _personId          = personId;
+        _personDisplayName = personDisplayName;
+        _meetingDate       = meetingDate;
+        InitializeComponent();
+        _lblBanner.Text = $"Meeting with {_personDisplayName}  ·  {_meetingDate:MMMM d, yyyy}";
         _cboAssignee.Items.Add("Manager");
         _cboAssignee.Items.Add(_personDisplayName);
         _cboAssignee.SelectedIndex = 0;
-        layout.Controls.Add(new Label { Text = "Assign to", TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill }, 0, 1);
-        layout.Controls.Add(_cboAssignee, 1, 1);
-
-        _dtpDue = new DateTimePicker
-        {
-            Dock = DockStyle.Fill,
-            Format = DateTimePickerFormat.Short,
-            Value = _meetingDate.AddDays(14)
-        };
-        layout.Controls.Add(new Label { Text = "Due Date", TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill }, 0, 2);
-        layout.Controls.Add(_dtpDue, 1, 2);
-
-        var btnPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Fill, Padding = new Padding(0, 6, 0, 0) };
-        layout.SetColumnSpan(btnPanel, 2);
-        var btnAdd    = new Button { Text = "Add",    Width = 120, DialogResult = DialogResult.OK };
-        var btnCancel = new Button { Text = "Cancel", Width = 120, DialogResult = DialogResult.Cancel };
-        btnAdd.Click += async (_, _) => await SaveAsync();
-        btnPanel.Controls.AddRange(new Control[] { btnCancel, btnAdd });
-        layout.Controls.Add(btnPanel, 0, 3);
-
-        AcceptButton = btnAdd;
-        CancelButton = btnCancel;
-
+        _dtpDue.Value = _meetingDate.AddDays(14);
         InitMentionDropdown();
-
-        Controls.Add(layout);
-        Controls.Add(banner);
+        if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
+            _ = LoadPeopleAsync();
     }
 
     private void InitMentionDropdown()
@@ -276,9 +192,6 @@ public class AddActionItemForm : Form
         await ctx.SaveChangesAsync();
     }
 
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing) _mentionDrop?.Dispose();
-        base.Dispose(disposing);
-    }
+    private void RtbDesc_Leave(object? sender, EventArgs e) { _mentionDrop?.Close(); }
+    private async void BtnAdd_Click(object? sender, EventArgs e) { await SaveAsync(); }
 }

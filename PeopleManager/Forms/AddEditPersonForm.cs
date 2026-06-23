@@ -6,84 +6,28 @@ namespace PeopleManager.Forms;
 /// <summary>
 /// Dialog for adding a new person (with initial job title) or editing an existing person's basic info.
 /// </summary>
-public class AddEditPersonForm : Form
+public partial class AddEditPersonForm : Form
 {
     private readonly int? _personId;
-    private TextBox _txtFirst = null!;
-    private TextBox _txtLast = null!;
-    private DateTimePicker _dtpStart = null!;
-    private TextBox _txtTitle = null!;
 
     /// <summary>Initialises the form in add mode when <paramref name="personId"/> is null, or edit mode otherwise.</summary>
     /// <param name="personId">The person to edit, or null to create a new person.</param>
+    public AddEditPersonForm() : this((int?)null) { }
+
     public AddEditPersonForm(int? personId)
     {
         _personId = personId;
-        BuildUI();
-        if (personId.HasValue) _ = LoadAsync(personId.Value);
-    }
+        InitializeComponent();
 
-    private void BuildUI()
-    {
-        Text = _personId.HasValue ? "Edit Person" : "Add New Person";
-        Size = new Size(620, _personId.HasValue ? 390 : 460);
-        FormBorderStyle = FormBorderStyle.FixedDialog;
-        MaximizeBox = false;
-        MinimizeBox = false;
-        StartPosition = FormStartPosition.CenterParent;
-        Font = new Font("Segoe UI", 14f);
-        BackColor = Color.White;
-
-        var layout = new TableLayoutPanel
+        if (_personId.HasValue)
         {
-            Dock = DockStyle.Fill,
-            Padding = new Padding(20),
-            ColumnCount = 2,
-            RowCount = _personId.HasValue ? 5 : 6
-        };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-
-        int row = 0;
-        _txtLast  = AddRow(layout, "Last Name *", row++);
-        _txtFirst = AddRow(layout, "First Name *", row++);
-        _dtpStart = new DateTimePicker { Dock = DockStyle.Fill, Format = DateTimePickerFormat.Short, Value = DateTime.Today };
-        layout.Controls.Add(MakeLabel("Start Date *"), 0, row);
-        layout.Controls.Add(_dtpStart, 1, row++);
-
-        if (!_personId.HasValue)
-        {
-            _txtTitle = AddRow(layout, "Job Title *", row++);
+            Text = "Edit Person";
+            Height = 390;
+            _txtTitle.Visible = false;
+            _lblTitle.Visible = false;
         }
 
-        var btnPanel = new FlowLayoutPanel
-        {
-            FlowDirection = FlowDirection.RightToLeft,
-            Dock = DockStyle.Fill,
-            Padding = new Padding(0, 8, 0, 0)
-        };
-        layout.SetColumnSpan(btnPanel, 2);
-
-        var btnSave   = new Button { Text = "Save",   DialogResult = DialogResult.OK,     Width = 120 };
-        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 120 };
-        btnSave.Click += async (_, _) => await SaveAsync();
-        btnPanel.Controls.AddRange(new Control[] { btnCancel, btnSave });
-        layout.Controls.Add(btnPanel, 0, row);
-
-        AcceptButton = btnSave;
-        CancelButton = btnCancel;
-        Controls.Add(layout);
-    }
-
-    private static Label MakeLabel(string text) =>
-        new() { Text = text, TextAlign = ContentAlignment.MiddleRight, Dock = DockStyle.Fill };
-
-    private static TextBox AddRow(TableLayoutPanel layout, string label, int row)
-    {
-        var tb = new TextBox { Dock = DockStyle.Fill };
-        layout.Controls.Add(MakeLabel(label), 0, row);
-        layout.Controls.Add(tb, 1, row);
-        return tb;
+        if (personId.HasValue) _ = LoadAsync(personId.Value);
     }
 
     private async Task LoadAsync(int id)
@@ -145,4 +89,6 @@ public class AddEditPersonForm : Form
         await ctx.SaveChangesAsync();
         DialogResult = DialogResult.OK;
     }
+
+    private async void BtnSave_Click(object? sender, EventArgs e) { await SaveAsync(); }
 }
