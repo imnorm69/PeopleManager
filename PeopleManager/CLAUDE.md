@@ -1,41 +1,45 @@
 # Project: PeopleManager
 
 ## Project Type
-winforms
+Blazor Server (branch `blazor`); WinForms legacy on `main`
 
 ## Target Framework
 net9.0
 
-## Project Structure
-- `PeopleManager/` - main project
-
 ## Tech Stack
 - Language: C#
-- Framework: Windows Forms (.NET 9)
-- Database: SQL Server (Server=WIN1164, DB=BAPeopleMgr, User=BAPeopleDev)
-- ORM: Entity Framework Core 9 (EnsureCreated on startup — no migrations yet)
+- Framework: Blazor Server (.NET 9) + MudBlazor 8.x
+- Database: SQLite
+- ORM: Entity Framework Core 9 (migrations in `PeopleManager/Migrations/`)
 
 ## Key Conventions
-- Use async/await throughout (async void event handlers, async Task for logic)
-- DbFactory.Create() returns a fresh DbContext per operation — dispose with `await using`
-- All Forms use the standard WinForms partial-class pattern: FormName.cs (business logic) + FormName.Designer.cs (InitializeComponent)
-- All layout belongs in InitializeComponent() in Designer.cs — never in a BuildUI() method
-- DataGridView rows store their entity PK in row.Tag
+- Use async/await throughout
+- `IDbContextFactory<AppDbContext>` injected via DI — each operation does `await using var db = await DbFactory.CreateDbContextAsync()`
+- MudBlazor dialog instance: `[CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;`
+- All pages use `@inject IDbContextFactory<AppDbContext> DbFactory`
+- Dialogs use typed `DialogParameters<TDialog>` for parameters
 
 ## Project Structure
-- Models/ — entity POCOs
-- Data/ — AppDbContext + DbFactory (connection string lives in DbFactory.cs)
-- Forms/ — dialog and full-page forms
-- Controls/ — UserControls swapped into MainForm's content panel
+- `Models/` — entity POCOs
+- `Data/` — `AppDbContext`, `AppDbContextFactory` (design-time migrations)
+- `Migrations/` — EF Core migration files
+- `Components/` — all Blazor components
+  - `App.razor`, `Routes.razor`, `_Imports.razor`
+  - `Layout/` — `MainLayout.razor`, `NavMenu.razor`
+  - `Pages/` — Dashboard, People/, Meetings/, GlowsGrows/, Questions/
+  - `Dialogs/` — all MudBlazor dialog components
+- `wwwroot/` — `app.css`
+- `appsettings.json` — `DatabasePath` key for SQLite file location
 
 ## Build and Run
-- Build: `dotnet build` or Ctrl+Shift+B in VS 2022
-- Run: F5 or Ctrl+F5
-- DB is auto-created on first run via EnsureCreated
+- Build: `dotnet build`
+- Run: `dotnet run` — starts Kestrel on http://localhost:5000
+- Prod DB path: set `DatabasePath=/var/lib/peoplemanager/people.db` env var in systemd unit
+- Deploy: `dotnet publish -c Release -o ./publish` then rsync to LXC
 
 ## Modules Implemented
-- Dashboard: open action items list (assignee + date sort)
-- People: list, add/edit, PersonDetailForm with Job Titles + Teams tabs
-- 1:1 Meetings: list, MeetingForm with notes tabs + action items + checklist review
-- Glows & Grows: list with filters, add/edit, mark communicated
-- Templates: list, ChecklistTemplateForm (label/category/items), AssignTemplateForm
+- Dashboard: open action items list (assignee + due date sort)
+- People: list, add/edit, PersonDetail with Job Titles / Teams / Employment History / Meetings tabs
+- 1:1 Meetings: list, MeetingDetail with notes tabs (Project/Career/Training/General/Checklist) + action items + glows/grows communicate panel
+- Glows & Grows: filterable list, add/edit/delete
+- Questions: checklist question list, add question, assign to person with frequency
