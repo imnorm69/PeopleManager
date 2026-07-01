@@ -25,20 +25,15 @@ public static class DbFactory
     }
 
     /// <summary>
-    /// Ensures the database file and directory exist and the schema is up to date.
+    /// Ensures the database file and directory exist and all migrations are applied.
     /// Called once at application startup before the main window is shown.
+    /// To add a schema change: dotnet ef migrations add &lt;MigrationName&gt;
     /// </summary>
     public static async Task InitializeDatabaseAsync()
     {
         Directory.CreateDirectory(Path.GetDirectoryName(DbPath)!);
 
         await using var ctx = Create();
-
-        // Creates the .db file and all tables if this is a brand-new install.
-        // For schema changes going forward, add an EF Core migration:
-        //   dotnet ef migrations add <MigrationName>
-        //   dotnet ef database update
-        // then switch this call to ctx.Database.MigrateAsync().
-        await ctx.Database.EnsureCreatedAsync();
+        await ctx.Database.MigrateAsync();
     }
 }
