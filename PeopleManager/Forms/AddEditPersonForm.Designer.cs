@@ -18,15 +18,15 @@ partial class AddEditPersonForm
         _dtpStart = new DateTimePicker();
         _txtTitle = new TextBox();
         _lblTitle = new Label();
-        layout = new TableLayoutPanel();
-        lblLast = new Label();
-        lblFirst = new Label();
-        lblStart = new Label();
-        btnPanel = new FlowLayoutPanel();
-        btnCancel = new Button();
-        btnSave = new Button();
-        layout.SuspendLayout();
-        btnPanel.SuspendLayout();
+        _layout = new TableLayoutPanel();
+        _lblLast = new Label();
+        _lblFirst = new Label();
+        _lblStart = new Label();
+        _btnPanel = new FlowLayoutPanel();
+        _btnCancel = new Button();
+        _btnSave = new Button();
+        _layout.SuspendLayout();
+        _btnPanel.SuspendLayout();
         SuspendLayout();
         // 
         // _txtLast
@@ -73,103 +73,103 @@ partial class AddEditPersonForm
         _lblTitle.Text = "Job Title *";
         _lblTitle.TextAlign = ContentAlignment.MiddleRight;
         // 
-        // layout
+        // _layout
         // 
-        layout.ColumnCount = 2;
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180F));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        layout.Controls.Add(lblLast, 0, 0);
-        layout.Controls.Add(_txtLast, 1, 0);
-        layout.Controls.Add(lblFirst, 0, 1);
-        layout.Controls.Add(_txtFirst, 1, 1);
-        layout.Controls.Add(lblStart, 0, 2);
-        layout.Controls.Add(_dtpStart, 1, 2);
-        layout.Controls.Add(_lblTitle, 0, 3);
-        layout.Controls.Add(_txtTitle, 1, 3);
-        layout.Controls.Add(btnPanel, 0, 4);
-        layout.Dock = DockStyle.Fill;
-        layout.Location = new Point(0, 0);
-        layout.Name = "layout";
-        layout.Padding = new Padding(20);
-        layout.RowCount = 6;
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
-        layout.Size = new Size(604, 421);
-        layout.TabIndex = 0;
+        _layout.ColumnCount = 2;
+        _layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180F));
+        _layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        _layout.Controls.Add(_lblLast, 0, 0);
+        _layout.Controls.Add(_txtLast, 1, 0);
+        _layout.Controls.Add(_lblFirst, 0, 1);
+        _layout.Controls.Add(_txtFirst, 1, 1);
+        _layout.Controls.Add(_lblStart, 0, 2);
+        _layout.Controls.Add(_dtpStart, 1, 2);
+        _layout.Controls.Add(_lblTitle, 0, 3);
+        _layout.Controls.Add(_txtTitle, 1, 3);
+        _layout.Controls.Add(_btnPanel, 0, 4);
+        _layout.Dock = DockStyle.Fill;
+        _layout.Location = new Point(0, 0);
+        _layout.Name = "_layout";
+        _layout.Padding = new Padding(20);
+        _layout.RowCount = 6;
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));
+        _layout.Size = new Size(604, 421);
+        _layout.TabIndex = 0;
         // 
-        // lblLast
+        // _lblLast
         // 
-        lblLast.Dock = DockStyle.Fill;
-        lblLast.Location = new Point(23, 20);
-        lblLast.Name = "lblLast";
-        lblLast.Size = new Size(174, 51);
-        lblLast.TabIndex = 0;
-        lblLast.Text = "Last Name *";
-        lblLast.TextAlign = ContentAlignment.MiddleRight;
+        _lblLast.Dock = DockStyle.Fill;
+        _lblLast.Location = new Point(23, 20);
+        _lblLast.Name = "_lblLast";
+        _lblLast.Size = new Size(174, 51);
+        _lblLast.TabIndex = 0;
+        _lblLast.Text = "Last Name *";
+        _lblLast.TextAlign = ContentAlignment.MiddleRight;
         // 
-        // lblFirst
+        // _lblFirst
         // 
-        lblFirst.Dock = DockStyle.Fill;
-        lblFirst.Location = new Point(23, 71);
-        lblFirst.Name = "lblFirst";
-        lblFirst.Size = new Size(174, 51);
-        lblFirst.TabIndex = 2;
-        lblFirst.Text = "First Name *";
-        lblFirst.TextAlign = ContentAlignment.MiddleRight;
+        _lblFirst.Dock = DockStyle.Fill;
+        _lblFirst.Location = new Point(23, 71);
+        _lblFirst.Name = "_lblFirst";
+        _lblFirst.Size = new Size(174, 51);
+        _lblFirst.TabIndex = 2;
+        _lblFirst.Text = "First Name *";
+        _lblFirst.TextAlign = ContentAlignment.MiddleRight;
         // 
-        // lblStart
+        // _lblStart
         // 
-        lblStart.Dock = DockStyle.Fill;
-        lblStart.Location = new Point(23, 122);
-        lblStart.Name = "lblStart";
-        lblStart.Size = new Size(174, 51);
-        lblStart.TabIndex = 4;
-        lblStart.Text = "Start Date *";
-        lblStart.TextAlign = ContentAlignment.MiddleRight;
+        _lblStart.Dock = DockStyle.Fill;
+        _lblStart.Location = new Point(23, 122);
+        _lblStart.Name = "_lblStart";
+        _lblStart.Size = new Size(174, 51);
+        _lblStart.TabIndex = 4;
+        _lblStart.Text = "Start Date *";
+        _lblStart.TextAlign = ContentAlignment.MiddleRight;
         // 
-        // btnPanel
+        // _btnPanel
         // 
-        layout.SetColumnSpan(btnPanel, 2);
-        btnPanel.Controls.Add(btnCancel);
-        btnPanel.Controls.Add(btnSave);
-        btnPanel.Dock = DockStyle.Fill;
-        btnPanel.FlowDirection = FlowDirection.RightToLeft;
-        btnPanel.Location = new Point(23, 227);
-        btnPanel.Name = "btnPanel";
-        btnPanel.Padding = new Padding(0, 8, 0, 0);
-        btnPanel.Size = new Size(558, 54);
-        btnPanel.TabIndex = 8;
+        _layout.SetColumnSpan(_btnPanel, 2);
+        _btnPanel.Controls.Add(_btnCancel);
+        _btnPanel.Controls.Add(_btnSave);
+        _btnPanel.Dock = DockStyle.Fill;
+        _btnPanel.FlowDirection = FlowDirection.RightToLeft;
+        _btnPanel.Location = new Point(23, 227);
+        _btnPanel.Name = "_btnPanel";
+        _btnPanel.Padding = new Padding(0, 8, 0, 0);
+        _btnPanel.Size = new Size(558, 54);
+        _btnPanel.TabIndex = 8;
         // 
-        // btnCancel
+        // _btnCancel
         // 
-        btnCancel.DialogResult = DialogResult.Cancel;
-        btnCancel.Location = new Point(435, 11);
-        btnCancel.Name = "btnCancel";
-        btnCancel.Size = new Size(120, 33);
-        btnCancel.TabIndex = 0;
-        btnCancel.Text = "Cancel";
+        _btnCancel.DialogResult = DialogResult.Cancel;
+        _btnCancel.Location = new Point(435, 11);
+        _btnCancel.Name = "_btnCancel";
+        _btnCancel.Size = new Size(120, 33);
+        _btnCancel.TabIndex = 0;
+        _btnCancel.Text = "Cancel";
         // 
-        // btnSave
+        // _btnSave
         // 
-        btnSave.DialogResult = DialogResult.OK;
-        btnSave.Location = new Point(309, 11);
-        btnSave.Name = "btnSave";
-        btnSave.Size = new Size(120, 33);
-        btnSave.TabIndex = 1;
-        btnSave.Text = "Save";
-        btnSave.Click += BtnSave_Click;
+        _btnSave.DialogResult = DialogResult.OK;
+        _btnSave.Location = new Point(309, 11);
+        _btnSave.Name = "_btnSave";
+        _btnSave.Size = new Size(120, 33);
+        _btnSave.TabIndex = 1;
+        _btnSave.Text = "Save";
+        _btnSave.Click += BtnSave_Click;
         // 
         // AddEditPersonForm
         // 
-        AcceptButton = btnSave;
+        AcceptButton = _btnSave;
         BackColor = Color.White;
-        CancelButton = btnCancel;
+        CancelButton = _btnCancel;
         ClientSize = new Size(604, 421);
-        Controls.Add(layout);
+        Controls.Add(_layout);
         Font = new Font("Segoe UI", 14F);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -177,9 +177,9 @@ partial class AddEditPersonForm
         Name = "AddEditPersonForm";
         StartPosition = FormStartPosition.CenterParent;
         Text = "Add New Person";
-        layout.ResumeLayout(false);
-        layout.PerformLayout();
-        btnPanel.ResumeLayout(false);
+        _layout.ResumeLayout(false);
+        _layout.PerformLayout();
+        _btnPanel.ResumeLayout(false);
         ResumeLayout(false);
     }
 
@@ -188,11 +188,11 @@ partial class AddEditPersonForm
     private System.Windows.Forms.DateTimePicker _dtpStart = null!;
     private System.Windows.Forms.TextBox _txtTitle = null!;
     private System.Windows.Forms.Label _lblTitle = null!;
-    private TableLayoutPanel layout;
-    private Label lblLast;
-    private Label lblFirst;
-    private Label lblStart;
-    private FlowLayoutPanel btnPanel;
-    private Button btnCancel;
-    private Button btnSave;
+    private TableLayoutPanel _layout;
+    private Label _lblLast;
+    private Label _lblFirst;
+    private Label _lblStart;
+    private FlowLayoutPanel _btnPanel;
+    private Button _btnCancel;
+    private Button _btnSave;
 }

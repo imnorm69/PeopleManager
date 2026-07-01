@@ -19,19 +19,19 @@ partial class SeparatePersonForm
         _lblNotesRequired = new Label();
         _rtbNotes = new RichTextBox();
         _btnSeparate = new Button();
-        layout = new TableLayoutPanel();
-        lblSepDate = new Label();
-        lblReason = new Label();
-        lblNotes = new Label();
-        btnPanel = new FlowLayoutPanel();
-        btnCancel = new Button();
-        layout.SuspendLayout();
-        btnPanel.SuspendLayout();
+        _layout = new TableLayoutPanel();
+        _lblSepDate = new Label();
+        _lblReason = new Label();
+        _lblNotes = new Label();
+        _btnPanel = new FlowLayoutPanel();
+        _btnCancel = new Button();
+        _layout.SuspendLayout();
+        _btnPanel.SuspendLayout();
         SuspendLayout();
         // 
         // _lblPersonName
         // 
-        layout.SetColumnSpan(_lblPersonName, 2);
+        _layout.SetColumnSpan(_lblPersonName, 2);
         _lblPersonName.Dock = DockStyle.Fill;
         _lblPersonName.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
         _lblPersonName.ForeColor = Color.FromArgb(30, 58, 95);
@@ -64,7 +64,7 @@ partial class SeparatePersonForm
         // 
         // _lblNotesRequired
         // 
-        layout.SetColumnSpan(_lblNotesRequired, 2);
+        _layout.SetColumnSpan(_lblNotesRequired, 2);
         _lblNotesRequired.Dock = DockStyle.Fill;
         _lblNotesRequired.Font = new Font("Segoe UI", 12F, FontStyle.Italic);
         _lblNotesRequired.ForeColor = Color.FromArgb(192, 57, 43);
@@ -99,94 +99,94 @@ partial class SeparatePersonForm
         _btnSeparate.UseVisualStyleBackColor = false;
         _btnSeparate.Click += BtnSeparate_Click;
         // 
-        // layout
+        // _layout
         // 
-        layout.ColumnCount = 2;
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 195F));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        layout.Controls.Add(_lblPersonName, 0, 0);
-        layout.Controls.Add(lblSepDate, 0, 1);
-        layout.Controls.Add(_dtpSeparation, 1, 1);
-        layout.Controls.Add(lblReason, 0, 2);
-        layout.Controls.Add(_cboReason, 1, 2);
-        layout.Controls.Add(_lblNotesRequired, 0, 3);
-        layout.Controls.Add(lblNotes, 0, 4);
-        layout.Controls.Add(_rtbNotes, 1, 4);
-        layout.Controls.Add(btnPanel, 0, 5);
-        layout.Dock = DockStyle.Fill;
-        layout.Location = new Point(0, 0);
-        layout.Name = "layout";
-        layout.Padding = new Padding(20);
-        layout.RowCount = 6;
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 54F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 63F));
-        layout.Size = new Size(664, 471);
-        layout.TabIndex = 0;
+        _layout.ColumnCount = 2;
+        _layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 195F));
+        _layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        _layout.Controls.Add(_lblPersonName, 0, 0);
+        _layout.Controls.Add(_lblSepDate, 0, 1);
+        _layout.Controls.Add(_dtpSeparation, 1, 1);
+        _layout.Controls.Add(_lblReason, 0, 2);
+        _layout.Controls.Add(_cboReason, 1, 2);
+        _layout.Controls.Add(_lblNotesRequired, 0, 3);
+        _layout.Controls.Add(_lblNotes, 0, 4);
+        _layout.Controls.Add(_rtbNotes, 1, 4);
+        _layout.Controls.Add(_btnPanel, 0, 5);
+        _layout.Dock = DockStyle.Fill;
+        _layout.Location = new Point(0, 0);
+        _layout.Name = "_layout";
+        _layout.Padding = new Padding(20);
+        _layout.RowCount = 6;
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 54F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 63F));
+        _layout.Size = new Size(664, 471);
+        _layout.TabIndex = 0;
         // 
-        // lblSepDate
+        // _lblSepDate
         // 
-        lblSepDate.Dock = DockStyle.Fill;
-        lblSepDate.Location = new Point(23, 74);
-        lblSepDate.Name = "lblSepDate";
-        lblSepDate.Size = new Size(189, 51);
-        lblSepDate.TabIndex = 1;
-        lblSepDate.Text = "Separation Date *";
-        lblSepDate.TextAlign = ContentAlignment.MiddleRight;
+        _lblSepDate.Dock = DockStyle.Fill;
+        _lblSepDate.Location = new Point(23, 74);
+        _lblSepDate.Name = "_lblSepDate";
+        _lblSepDate.Size = new Size(189, 51);
+        _lblSepDate.TabIndex = 1;
+        _lblSepDate.Text = "Separation Date *";
+        _lblSepDate.TextAlign = ContentAlignment.MiddleRight;
         // 
-        // lblReason
+        // _lblReason
         // 
-        lblReason.Dock = DockStyle.Fill;
-        lblReason.Location = new Point(23, 125);
-        lblReason.Name = "lblReason";
-        lblReason.Size = new Size(189, 51);
-        lblReason.TabIndex = 3;
-        lblReason.Text = "Reason *";
-        lblReason.TextAlign = ContentAlignment.MiddleRight;
+        _lblReason.Dock = DockStyle.Fill;
+        _lblReason.Location = new Point(23, 125);
+        _lblReason.Name = "_lblReason";
+        _lblReason.Size = new Size(189, 51);
+        _lblReason.TabIndex = 3;
+        _lblReason.Text = "Reason *";
+        _lblReason.TextAlign = ContentAlignment.MiddleRight;
         // 
-        // lblNotes
+        // _lblNotes
         // 
-        lblNotes.Dock = DockStyle.Fill;
-        lblNotes.Location = new Point(23, 206);
-        lblNotes.Name = "lblNotes";
-        lblNotes.Padding = new Padding(0, 4, 4, 0);
-        lblNotes.Size = new Size(189, 182);
-        lblNotes.TabIndex = 6;
-        lblNotes.Text = "Notes";
-        lblNotes.TextAlign = ContentAlignment.TopRight;
+        _lblNotes.Dock = DockStyle.Fill;
+        _lblNotes.Location = new Point(23, 206);
+        _lblNotes.Name = "_lblNotes";
+        _lblNotes.Padding = new Padding(0, 4, 4, 0);
+        _lblNotes.Size = new Size(189, 182);
+        _lblNotes.TabIndex = 6;
+        _lblNotes.Text = "Notes";
+        _lblNotes.TextAlign = ContentAlignment.TopRight;
         // 
-        // btnPanel
+        // _btnPanel
         // 
-        layout.SetColumnSpan(btnPanel, 2);
-        btnPanel.Controls.Add(btnCancel);
-        btnPanel.Controls.Add(_btnSeparate);
-        btnPanel.Dock = DockStyle.Fill;
-        btnPanel.FlowDirection = FlowDirection.RightToLeft;
-        btnPanel.Location = new Point(23, 391);
-        btnPanel.Name = "btnPanel";
-        btnPanel.Padding = new Padding(0, 6, 0, 0);
-        btnPanel.Size = new Size(618, 57);
-        btnPanel.TabIndex = 8;
+        _layout.SetColumnSpan(_btnPanel, 2);
+        _btnPanel.Controls.Add(_btnCancel);
+        _btnPanel.Controls.Add(_btnSeparate);
+        _btnPanel.Dock = DockStyle.Fill;
+        _btnPanel.FlowDirection = FlowDirection.RightToLeft;
+        _btnPanel.Location = new Point(23, 391);
+        _btnPanel.Name = "_btnPanel";
+        _btnPanel.Padding = new Padding(0, 6, 0, 0);
+        _btnPanel.Size = new Size(618, 57);
+        _btnPanel.TabIndex = 8;
         // 
-        // btnCancel
+        // _btnCancel
         // 
-        btnCancel.DialogResult = DialogResult.Cancel;
-        btnCancel.Location = new Point(495, 9);
-        btnCancel.Name = "btnCancel";
-        btnCancel.Size = new Size(120, 23);
-        btnCancel.TabIndex = 0;
-        btnCancel.Text = "Cancel";
+        _btnCancel.DialogResult = DialogResult.Cancel;
+        _btnCancel.Location = new Point(495, 9);
+        _btnCancel.Name = "_btnCancel";
+        _btnCancel.Size = new Size(120, 23);
+        _btnCancel.TabIndex = 0;
+        _btnCancel.Text = "Cancel";
         // 
         // SeparatePersonForm
         // 
         AcceptButton = _btnSeparate;
         BackColor = Color.White;
-        CancelButton = btnCancel;
+        CancelButton = _btnCancel;
         ClientSize = new Size(664, 471);
-        Controls.Add(layout);
+        Controls.Add(_layout);
         Font = new Font("Segoe UI", 14F);
         MaximizeBox = false;
         MinimizeBox = false;
@@ -194,9 +194,9 @@ partial class SeparatePersonForm
         Name = "SeparatePersonForm";
         StartPosition = FormStartPosition.CenterParent;
         Text = "Separate Employee";
-        layout.ResumeLayout(false);
-        layout.PerformLayout();
-        btnPanel.ResumeLayout(false);
+        _layout.ResumeLayout(false);
+        _layout.PerformLayout();
+        _btnPanel.ResumeLayout(false);
         ResumeLayout(false);
     }
 
@@ -206,10 +206,10 @@ partial class SeparatePersonForm
     private System.Windows.Forms.Label _lblNotesRequired = null!;
     private System.Windows.Forms.RichTextBox _rtbNotes = null!;
     private System.Windows.Forms.Button _btnSeparate = null!;
-    private TableLayoutPanel layout;
-    private Label lblSepDate;
-    private Label lblReason;
-    private Label lblNotes;
-    private FlowLayoutPanel btnPanel;
-    private Button btnCancel;
+    private TableLayoutPanel _layout;
+    private Label _lblSepDate;
+    private Label _lblReason;
+    private Label _lblNotes;
+    private FlowLayoutPanel _btnPanel;
+    private Button _btnCancel;
 }

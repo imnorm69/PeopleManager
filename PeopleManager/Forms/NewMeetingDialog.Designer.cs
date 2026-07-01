@@ -13,38 +13,38 @@ partial class NewMeetingDialog
 
     private void InitializeComponent()
     {
-        layout = new TableLayoutPanel();
+        _layout = new TableLayoutPanel();
         _lblPerson = new Label();
         _cboPerson = new ComboBox();
         _lblDate = new Label();
         _dtp = new DateTimePicker();
-        btnPanel = new FlowLayoutPanel();
-        btnCancel = new Button();
-        btnOK = new Button();
-        layout.SuspendLayout();
-        btnPanel.SuspendLayout();
+        _btnPanel = new FlowLayoutPanel();
+        _btnCancel = new Button();
+        _btnOK = new Button();
+        _layout.SuspendLayout();
+        _btnPanel.SuspendLayout();
         SuspendLayout();
         // 
-        // layout
+        // _layout
         // 
-        layout.ColumnCount = 2;
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        layout.Controls.Add(_lblPerson, 0, 0);
-        layout.Controls.Add(_cboPerson, 1, 0);
-        layout.Controls.Add(_lblDate, 0, 1);
-        layout.Controls.Add(_dtp, 1, 1);
-        layout.Controls.Add(btnPanel, 0, 2);
-        layout.Dock = DockStyle.Fill;
-        layout.Location = new Point(0, 0);
-        layout.Name = "layout";
-        layout.Padding = new Padding(16);
-        layout.RowCount = 3;
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 63F));
-        layout.Size = new Size(504, 221);
-        layout.TabIndex = 0;
+        _layout.ColumnCount = 2;
+        _layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
+        _layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        _layout.Controls.Add(_lblPerson, 0, 0);
+        _layout.Controls.Add(_cboPerson, 1, 0);
+        _layout.Controls.Add(_lblDate, 0, 1);
+        _layout.Controls.Add(_dtp, 1, 1);
+        _layout.Controls.Add(_btnPanel, 0, 2);
+        _layout.Dock = DockStyle.Fill;
+        _layout.Location = new Point(0, 0);
+        _layout.Name = "_layout";
+        _layout.Padding = new Padding(16);
+        _layout.RowCount = 3;
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 63F));
+        _layout.Size = new Size(504, 221);
+        _layout.TabIndex = 0;
         // 
         // _lblPerson
         // 
@@ -84,45 +84,45 @@ partial class NewMeetingDialog
         _dtp.Size = new Size(346, 32);
         _dtp.TabIndex = 3;
         // 
-        // btnPanel
+        // _btnPanel
         // 
-        layout.SetColumnSpan(btnPanel, 2);
-        btnPanel.Controls.Add(btnCancel);
-        btnPanel.Controls.Add(btnOK);
-        btnPanel.Dock = DockStyle.Fill;
-        btnPanel.FlowDirection = FlowDirection.RightToLeft;
-        btnPanel.Location = new Point(19, 121);
-        btnPanel.Name = "btnPanel";
-        btnPanel.Padding = new Padding(0, 6, 0, 0);
-        btnPanel.Size = new Size(466, 81);
-        btnPanel.TabIndex = 4;
+        _layout.SetColumnSpan(_btnPanel, 2);
+        _btnPanel.Controls.Add(_btnCancel);
+        _btnPanel.Controls.Add(_btnOK);
+        _btnPanel.Dock = DockStyle.Fill;
+        _btnPanel.FlowDirection = FlowDirection.RightToLeft;
+        _btnPanel.Location = new Point(19, 121);
+        _btnPanel.Name = "_btnPanel";
+        _btnPanel.Padding = new Padding(0, 6, 0, 0);
+        _btnPanel.Size = new Size(466, 81);
+        _btnPanel.TabIndex = 4;
         // 
-        // btnCancel
+        // _btnCancel
         // 
-        btnCancel.DialogResult = DialogResult.Cancel;
-        btnCancel.Location = new Point(343, 9);
-        btnCancel.Name = "btnCancel";
-        btnCancel.Size = new Size(120, 38);
-        btnCancel.TabIndex = 0;
-        btnCancel.Text = "Cancel";
+        _btnCancel.DialogResult = DialogResult.Cancel;
+        _btnCancel.Location = new Point(343, 9);
+        _btnCancel.Name = "_btnCancel";
+        _btnCancel.Size = new Size(120, 38);
+        _btnCancel.TabIndex = 0;
+        _btnCancel.Text = "Cancel";
         // 
-        // btnOK
+        // _btnOK
         // 
-        btnOK.DialogResult = DialogResult.OK;
-        btnOK.Location = new Point(217, 9);
-        btnOK.Name = "btnOK";
-        btnOK.Size = new Size(120, 38);
-        btnOK.TabIndex = 1;
-        btnOK.Text = "OK";
-        btnOK.Click += BtnOK_Click;
+        _btnOK.DialogResult = DialogResult.OK;
+        _btnOK.Location = new Point(217, 9);
+        _btnOK.Name = "_btnOK";
+        _btnOK.Size = new Size(120, 38);
+        _btnOK.TabIndex = 1;
+        _btnOK.Text = "OK";
+        _btnOK.Click += BtnOK_Click;
         // 
         // NewMeetingDialog
         // 
-        AcceptButton = btnOK;
+        AcceptButton = _btnOK;
         BackColor = Color.White;
-        CancelButton = btnCancel;
+        CancelButton = _btnCancel;
         ClientSize = new Size(504, 221);
-        Controls.Add(layout);
+        Controls.Add(_layout);
         Font = new Font("Segoe UI", 14F);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -130,8 +130,8 @@ partial class NewMeetingDialog
         Name = "NewMeetingDialog";
         StartPosition = FormStartPosition.CenterParent;
         Text = "New 1:1 Meeting";
-        layout.ResumeLayout(false);
-        btnPanel.ResumeLayout(false);
+        _layout.ResumeLayout(false);
+        _btnPanel.ResumeLayout(false);
         ResumeLayout(false);
     }
 
@@ -139,8 +139,8 @@ partial class NewMeetingDialog
     private System.Windows.Forms.ComboBox _cboPerson;
     private System.Windows.Forms.Label _lblDate;
     private System.Windows.Forms.DateTimePicker _dtp;
-    private TableLayoutPanel layout;
-    private FlowLayoutPanel btnPanel;
-    private Button btnCancel;
-    private Button btnOK;
+    private TableLayoutPanel _layout;
+    private FlowLayoutPanel _btnPanel;
+    private Button _btnCancel;
+    private Button _btnOK;
 }

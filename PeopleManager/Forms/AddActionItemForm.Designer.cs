@@ -18,19 +18,19 @@ partial class AddActionItemForm
     {
         _pnlBanner = new Panel();
         _lblBanner = new Label();
-        layout = new TableLayoutPanel();
-        lblDesc = new Label();
+        _layout = new TableLayoutPanel();
+        _lblDesc = new Label();
         _rtbDesc = new RichTextBox();
-        lblAssign = new Label();
+        _lblAssign = new Label();
         _cboAssignee = new ComboBox();
-        lblDue = new Label();
+        _lblDue = new Label();
         _dtpDue = new DateTimePicker();
-        btnPanel = new FlowLayoutPanel();
-        btnCancel = new Button();
-        btnAdd = new Button();
+        _btnPanel = new FlowLayoutPanel();
+        _btnCancel = new Button();
+        _btnAdd = new Button();
         _pnlBanner.SuspendLayout();
-        layout.SuspendLayout();
-        btnPanel.SuspendLayout();
+        _layout.SuspendLayout();
+        _btnPanel.SuspendLayout();
         SuspendLayout();
         // 
         // _pnlBanner
@@ -55,40 +55,40 @@ partial class AddActionItemForm
         _lblBanner.TabIndex = 0;
         _lblBanner.TextAlign = ContentAlignment.MiddleLeft;
         // 
-        // layout
+        // _layout
         // 
-        layout.ColumnCount = 2;
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 135F));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        layout.Controls.Add(lblDesc, 0, 0);
-        layout.Controls.Add(_rtbDesc, 1, 0);
-        layout.Controls.Add(lblAssign, 0, 1);
-        layout.Controls.Add(_cboAssignee, 1, 1);
-        layout.Controls.Add(lblDue, 0, 2);
-        layout.Controls.Add(_dtpDue, 1, 2);
-        layout.Controls.Add(btnPanel, 0, 3);
-        layout.Dock = DockStyle.Fill;
-        layout.Location = new Point(0, 45);
-        layout.Name = "layout";
-        layout.Padding = new Padding(14);
-        layout.RowCount = 4;
-        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
-        layout.Size = new Size(724, 411);
-        layout.TabIndex = 0;
+        _layout.ColumnCount = 2;
+        _layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 135F));
+        _layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        _layout.Controls.Add(_lblDesc, 0, 0);
+        _layout.Controls.Add(_rtbDesc, 1, 0);
+        _layout.Controls.Add(_lblAssign, 0, 1);
+        _layout.Controls.Add(_cboAssignee, 1, 1);
+        _layout.Controls.Add(_lblDue, 0, 2);
+        _layout.Controls.Add(_dtpDue, 1, 2);
+        _layout.Controls.Add(_btnPanel, 0, 3);
+        _layout.Dock = DockStyle.Fill;
+        _layout.Location = new Point(0, 45);
+        _layout.Name = "_layout";
+        _layout.Padding = new Padding(14);
+        _layout.RowCount = 4;
+        _layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 51F));
+        _layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
+        _layout.Size = new Size(724, 411);
+        _layout.TabIndex = 0;
         // 
-        // lblDesc
+        // _lblDesc
         // 
-        lblDesc.Dock = DockStyle.Fill;
-        lblDesc.Location = new Point(17, 14);
-        lblDesc.Name = "lblDesc";
-        lblDesc.Padding = new Padding(0, 5, 4, 0);
-        lblDesc.Size = new Size(129, 221);
-        lblDesc.TabIndex = 0;
-        lblDesc.Text = "Description *";
-        lblDesc.TextAlign = ContentAlignment.TopRight;
+        _lblDesc.Dock = DockStyle.Fill;
+        _lblDesc.Location = new Point(17, 14);
+        _lblDesc.Name = "_lblDesc";
+        _lblDesc.Padding = new Padding(0, 5, 4, 0);
+        _lblDesc.Size = new Size(129, 221);
+        _lblDesc.TabIndex = 0;
+        _lblDesc.Text = "Description *";
+        _lblDesc.TextAlign = ContentAlignment.TopRight;
         // 
         // _rtbDesc
         // 
@@ -104,15 +104,15 @@ partial class AddActionItemForm
         _rtbDesc.KeyDown += OnDescKeyDown;
         _rtbDesc.Leave += RtbDesc_Leave;
         // 
-        // lblAssign
+        // _lblAssign
         // 
-        lblAssign.Dock = DockStyle.Fill;
-        lblAssign.Location = new Point(17, 235);
-        lblAssign.Name = "lblAssign";
-        lblAssign.Size = new Size(129, 51);
-        lblAssign.TabIndex = 2;
-        lblAssign.Text = "Assign to";
-        lblAssign.TextAlign = ContentAlignment.MiddleRight;
+        _lblAssign.Dock = DockStyle.Fill;
+        _lblAssign.Location = new Point(17, 235);
+        _lblAssign.Name = "_lblAssign";
+        _lblAssign.Size = new Size(129, 51);
+        _lblAssign.TabIndex = 2;
+        _lblAssign.Text = "Assign to";
+        _lblAssign.TextAlign = ContentAlignment.MiddleRight;
         // 
         // _cboAssignee
         // 
@@ -123,15 +123,15 @@ partial class AddActionItemForm
         _cboAssignee.Size = new Size(555, 33);
         _cboAssignee.TabIndex = 3;
         // 
-        // lblDue
+        // _lblDue
         // 
-        lblDue.Dock = DockStyle.Fill;
-        lblDue.Location = new Point(17, 286);
-        lblDue.Name = "lblDue";
-        lblDue.Size = new Size(129, 51);
-        lblDue.TabIndex = 4;
-        lblDue.Text = "Due Date";
-        lblDue.TextAlign = ContentAlignment.MiddleRight;
+        _lblDue.Dock = DockStyle.Fill;
+        _lblDue.Location = new Point(17, 286);
+        _lblDue.Name = "_lblDue";
+        _lblDue.Size = new Size(129, 51);
+        _lblDue.TabIndex = 4;
+        _lblDue.Text = "Due Date";
+        _lblDue.TextAlign = ContentAlignment.MiddleRight;
         // 
         // _dtpDue
         // 
@@ -142,45 +142,45 @@ partial class AddActionItemForm
         _dtpDue.Size = new Size(555, 32);
         _dtpDue.TabIndex = 5;
         // 
-        // btnPanel
+        // _btnPanel
         // 
-        layout.SetColumnSpan(btnPanel, 2);
-        btnPanel.Controls.Add(btnCancel);
-        btnPanel.Controls.Add(btnAdd);
-        btnPanel.Dock = DockStyle.Fill;
-        btnPanel.FlowDirection = FlowDirection.RightToLeft;
-        btnPanel.Location = new Point(17, 340);
-        btnPanel.Name = "btnPanel";
-        btnPanel.Padding = new Padding(0, 6, 0, 0);
-        btnPanel.Size = new Size(690, 54);
-        btnPanel.TabIndex = 6;
+        _layout.SetColumnSpan(_btnPanel, 2);
+        _btnPanel.Controls.Add(_btnCancel);
+        _btnPanel.Controls.Add(_btnAdd);
+        _btnPanel.Dock = DockStyle.Fill;
+        _btnPanel.FlowDirection = FlowDirection.RightToLeft;
+        _btnPanel.Location = new Point(17, 340);
+        _btnPanel.Name = "_btnPanel";
+        _btnPanel.Padding = new Padding(0, 6, 0, 0);
+        _btnPanel.Size = new Size(690, 54);
+        _btnPanel.TabIndex = 6;
         // 
-        // btnCancel
+        // _btnCancel
         // 
-        btnCancel.DialogResult = DialogResult.Cancel;
-        btnCancel.Location = new Point(567, 9);
-        btnCancel.Name = "btnCancel";
-        btnCancel.Size = new Size(120, 23);
-        btnCancel.TabIndex = 0;
-        btnCancel.Text = "Cancel";
+        _btnCancel.DialogResult = DialogResult.Cancel;
+        _btnCancel.Location = new Point(567, 9);
+        _btnCancel.Name = "_btnCancel";
+        _btnCancel.Size = new Size(120, 23);
+        _btnCancel.TabIndex = 0;
+        _btnCancel.Text = "Cancel";
         // 
-        // btnAdd
+        // _btnAdd
         // 
-        btnAdd.DialogResult = DialogResult.OK;
-        btnAdd.Location = new Point(441, 9);
-        btnAdd.Name = "btnAdd";
-        btnAdd.Size = new Size(120, 23);
-        btnAdd.TabIndex = 1;
-        btnAdd.Text = "Add";
-        btnAdd.Click += BtnAdd_Click;
+        _btnAdd.DialogResult = DialogResult.OK;
+        _btnAdd.Location = new Point(441, 9);
+        _btnAdd.Name = "_btnAdd";
+        _btnAdd.Size = new Size(120, 23);
+        _btnAdd.TabIndex = 1;
+        _btnAdd.Text = "Add";
+        _btnAdd.Click += BtnAdd_Click;
         // 
         // AddActionItemForm
         // 
-        AcceptButton = btnAdd;
+        AcceptButton = _btnAdd;
         BackColor = Color.White;
-        CancelButton = btnCancel;
+        CancelButton = _btnCancel;
         ClientSize = new Size(724, 456);
-        Controls.Add(layout);
+        Controls.Add(_layout);
         Controls.Add(_pnlBanner);
         Font = new Font("Segoe UI", 14F);
         MaximizeBox = false;
@@ -190,9 +190,9 @@ partial class AddActionItemForm
         StartPosition = FormStartPosition.CenterParent;
         Text = "Add Action Item";
         _pnlBanner.ResumeLayout(false);
-        layout.ResumeLayout(false);
-        layout.PerformLayout();
-        btnPanel.ResumeLayout(false);
+        _layout.ResumeLayout(false);
+        _layout.PerformLayout();
+        _btnPanel.ResumeLayout(false);
         ResumeLayout(false);
     }
 
@@ -201,11 +201,11 @@ partial class AddActionItemForm
     private System.Windows.Forms.RichTextBox _rtbDesc = null!;
     private System.Windows.Forms.ComboBox _cboAssignee = null!;
     private System.Windows.Forms.DateTimePicker _dtpDue = null!;
-    private TableLayoutPanel layout;
-    private Label lblDesc;
-    private Label lblAssign;
-    private Label lblDue;
-    private FlowLayoutPanel btnPanel;
-    private Button btnCancel;
-    private Button btnAdd;
+    private TableLayoutPanel _layout;
+    private Label _lblDesc;
+    private Label _lblAssign;
+    private Label _lblDue;
+    private FlowLayoutPanel _btnPanel;
+    private Button _btnCancel;
+    private Button _btnAdd;
 }
