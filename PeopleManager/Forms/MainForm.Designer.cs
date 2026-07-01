@@ -23,21 +23,21 @@ partial class MainForm
         this._sidebar.Dock      = DockStyle.Left;
         this._sidebar.BackColor = Color.FromArgb(30, 58, 95);
 
-        var titleLabel = new Label();
-        titleLabel.Text      = "People Manager";
-        titleLabel.ForeColor = Color.White;
-        titleLabel.Font      = new Font("Segoe UI", 18f, FontStyle.Bold);
-        titleLabel.Dock      = DockStyle.Top;
-        titleLabel.Height    = 86;
-        titleLabel.TextAlign = ContentAlignment.MiddleCenter;
-        titleLabel.Padding   = new Padding(8);
+        _titleLabel = new Label();
+        _titleLabel.Text      = "People Manager";
+        _titleLabel.ForeColor = Color.White;
+        _titleLabel.Font      = new Font("Segoe UI", 18f, FontStyle.Bold);
+        _titleLabel.Dock      = DockStyle.Top;
+        _titleLabel.Height    = 86;
+        _titleLabel.TextAlign = ContentAlignment.MiddleCenter;
+        _titleLabel.Padding   = new Padding(8);
 
-        var navPanel = new FlowLayoutPanel();
-        navPanel.Dock          = DockStyle.Fill;
-        navPanel.FlowDirection = FlowDirection.TopDown;
-        navPanel.WrapContents  = false;
-        navPanel.AutoScroll    = false;
-        navPanel.Padding       = new Padding(0, 8, 0, 0);
+        _navPanel = new FlowLayoutPanel();
+        _navPanel.Dock          = DockStyle.Fill;
+        _navPanel.FlowDirection = FlowDirection.TopDown;
+        _navPanel.WrapContents  = false;
+        _navPanel.AutoScroll    = false;
+        _navPanel.Padding       = new Padding(0, 8, 0, 0);
 
         this._btnDashboard = new Button();
         this._btnDashboard.Text      = "  Dashboard";
@@ -114,7 +114,7 @@ partial class MainForm
         this._btnTemplates.FlatAppearance.MouseOverBackColor = Color.FromArgb(52, 73, 110);
         this._btnTemplates.FlatAppearance.MouseDownBackColor = Color.FromArgb(41, 128, 185);
 
-        navPanel.Controls.AddRange(new Control[]
+        _navPanel.Controls.AddRange(new Control[]
         {
             this._btnDashboard, this._btnPeople, this._btnMeetings,
             this._btnGlowsGrows, this._btnTemplates
@@ -126,8 +126,8 @@ partial class MainForm
         this._btnGlowsGrows.Click += BtnGlowsGrows_Click;
         this._btnTemplates.Click  += BtnTemplates_Click;
 
-        this._sidebar.Controls.Add(navPanel);
-        this._sidebar.Controls.Add(titleLabel);
+        this._sidebar.Controls.Add(_navPanel);
+        this._sidebar.Controls.Add(_titleLabel);
 
         // ── Content area ─────────────────────────────────────────────────────────
         this._contentPanel = new Panel
@@ -151,11 +151,13 @@ partial class MainForm
         this.PerformLayout();
     }
 
-    private Panel   _sidebar        = null!;
-    private Panel   _contentPanel   = null!;
-    private Button  _btnDashboard   = null!;
-    private Button  _btnPeople      = null!;
-    private Button  _btnMeetings    = null!;
-    private Button  _btnGlowsGrows  = null!;
-    private Button  _btnTemplates   = null!;
+    private Panel            _sidebar        = null!;
+    private Panel            _contentPanel   = null!;
+    private Label            _titleLabel     = null!;
+    private FlowLayoutPanel  _navPanel       = null!;
+    private Button           _btnDashboard   = null!;
+    private Button           _btnPeople      = null!;
+    private Button           _btnMeetings    = null!;
+    private Button           _btnGlowsGrows  = null!;
+    private Button           _btnTemplates   = null!;
 }

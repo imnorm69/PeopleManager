@@ -703,7 +703,8 @@ partial class MeetingForm
         pnlChecklistHdr.TabIndex = 1;
         // 
         // tblChecklistHdr
-        // 
+        //
+        tblChecklistHdr.ColumnCount = 3;
         tblChecklistHdr.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
         tblChecklistHdr.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130F));
         tblChecklistHdr.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 260F));
@@ -713,6 +714,7 @@ partial class MeetingForm
         tblChecklistHdr.Dock = DockStyle.Fill;
         tblChecklistHdr.Location = new Point(0, 0);
         tblChecklistHdr.Name = "tblChecklistHdr";
+        tblChecklistHdr.RowCount = 1;
         tblChecklistHdr.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         tblChecklistHdr.Size = new Size(192, 40);
         tblChecklistHdr.TabIndex = 0;
@@ -772,6 +774,7 @@ partial class MeetingForm
         pnlHeader.ResumeLayout(false);
         pnlFooter.ResumeLayout(false);
         tblRight.ResumeLayout(false);
+        tblRight.PerformLayout();
         pnlRight.ResumeLayout(false);
         flowAI.ResumeLayout(false);
         flowAI.PerformLayout();
@@ -791,6 +794,7 @@ partial class MeetingForm
         pnlChecklistOuter.ResumeLayout(false);
         pnlChecklistHdr.ResumeLayout(false);
         tblChecklistHdr.ResumeLayout(false);
+        tblChecklistHdr.PerformLayout();
         ResumeLayout(false);
     }
 

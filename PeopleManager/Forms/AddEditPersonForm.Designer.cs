@@ -149,7 +149,7 @@ partial class AddEditPersonForm
         btnCancel.DialogResult = DialogResult.Cancel;
         btnCancel.Location = new Point(435, 11);
         btnCancel.Name = "btnCancel";
-        btnCancel.Size = new Size(120, 23);
+        btnCancel.Size = new Size(120, 33);
         btnCancel.TabIndex = 0;
         btnCancel.Text = "Cancel";
         // 
@@ -158,7 +158,7 @@ partial class AddEditPersonForm
         btnSave.DialogResult = DialogResult.OK;
         btnSave.Location = new Point(309, 11);
         btnSave.Name = "btnSave";
-        btnSave.Size = new Size(120, 23);
+        btnSave.Size = new Size(120, 33);
         btnSave.TabIndex = 1;
         btnSave.Text = "Save";
         btnSave.Click += BtnSave_Click;

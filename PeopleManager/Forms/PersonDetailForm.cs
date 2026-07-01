@@ -24,6 +24,12 @@ public partial class PersonDetailForm : Form
             _ = LoadAsync();
     }
 
+    protected override void OnLoad(EventArgs e)
+    {
+        base.OnLoad(e);
+        _splitTeams.SplitterDistance = 300;
+    }
+
     private async Task LoadAsync()
     {
         await using var ctx = DbFactory.Create();
@@ -63,10 +69,14 @@ public partial class PersonDetailForm : Form
 
         _gridTitles.Rows.Clear();
         var titles = person.JobTitles.OrderByDescending(j => j.EffectiveDate).ToList();
-        for (int i = 0; i < titles.Count; i++)
+        var currentTitleId = person.JobTitles
+            .Where(j => j.EffectiveDate <= DateTime.Today)
+            .OrderByDescending(j => j.EffectiveDate)
+            .FirstOrDefault()?.PersonJobTitleId;
+        foreach (var jt in titles)
         {
-            var jt = titles[i];
-            _gridTitles.Rows.Add(jt.Title, jt.EffectiveDate.ToShortDateString(), i == 0 ? "✓" : "");
+            _gridTitles.Rows.Add(jt.Title, jt.EffectiveDate.ToShortDateString(),
+                jt.PersonJobTitleId == currentTitleId ? "✓" : "");
             _gridTitles.Rows[^1].Tag = jt.PersonJobTitleId;
         }
 
@@ -174,6 +184,15 @@ public partial class PersonDetailForm : Form
     private async void BtnReHire_Click(object? sender, EventArgs e) { await ReHireAsync(); }
     private async void BtnEdit_Click(object? sender, EventArgs e) { await EditBasicInfoAsync(); }
     private async void BtnAddTitle_Click(object? sender, EventArgs e) { await AddJobTitleAsync(); }
+
+    private async void GridTitles_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0) return;
+        if (_gridTitles.Rows[e.RowIndex].Tag is not int titleId) return;
+        using var form = new AddJobTitleForm(_personId, titleId);
+        if (form.ShowDialog() == DialogResult.OK)
+            await LoadAsync();
+    }
     private async void BtnAddTeam_Click(object? sender, EventArgs e) { await AddTeamAssignmentAsync(); }
     private async void BtnRemoveTeam_Click(object? sender, EventArgs e) { await RemoveTeamAssignmentAsync(); }
 }

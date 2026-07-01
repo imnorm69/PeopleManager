@@ -195,6 +195,7 @@ partial class SeparatePersonForm
         StartPosition = FormStartPosition.CenterParent;
         Text = "Separate Employee";
         layout.ResumeLayout(false);
+        layout.PerformLayout();
         btnPanel.ResumeLayout(false);
         ResumeLayout(false);
     }

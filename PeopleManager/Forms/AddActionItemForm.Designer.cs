@@ -191,6 +191,7 @@ partial class AddActionItemForm
         Text = "Add Action Item";
         _pnlBanner.ResumeLayout(false);
         layout.ResumeLayout(false);
+        layout.PerformLayout();
         btnPanel.ResumeLayout(false);
         ResumeLayout(false);
     }
