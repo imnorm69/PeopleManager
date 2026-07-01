@@ -1,31 +1,42 @@
+using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
+using PeopleManager.Components;
 using PeopleManager.Data;
-using PeopleManager.Forms;
 
-namespace PeopleManager;
+var builder = WebApplication.CreateBuilder(args);
 
-static class Program
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+
+builder.Services.AddMudServices();
+
+var dbPath = builder.Configuration["DatabasePath"]
+    ?? Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "PeopleManager",
+        "people.db");
+
+Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+    options.UseSqlite($"Data Source={dbPath}"));
+
+var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
 {
-    [STAThread]
-    static async Task Main()
-    {
-        ApplicationConfiguration.Initialize();
-        Application.SetHighDpiMode(HighDpiMode.SystemAware);
-
-        // Ensure DB exists
-        try
-        {
-            await DbFactory.InitializeDatabaseAsync();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                $"Could not connect to the database.\n\n{ex.Message}",
-                "Database Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error);
-            return;
-        }
-
-        Application.Run(new MainForm());
-    }
+    var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+    await using var db = await factory.CreateDbContextAsync();
+    await db.Database.MigrateAsync();
 }
+
+if (!app.Environment.IsDevelopment())
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+
+app.UseStaticFiles();
+app.UseAntiforgery();
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+
+app.Run();

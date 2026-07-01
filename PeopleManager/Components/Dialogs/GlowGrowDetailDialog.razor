@@ -1,0 +1,107 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Style="@(_item?.Type == GlowGrowType.Glow ? "color:#27ae60;" : "color:#c0392b;")">
+            @(_item?.Type.ToString() ?? "Detail")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_loading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (_item is not null)
+        {
+            <div class="d-flex flex-column gap-3">
+                <MudTextField Value="_item.Person.DisplayName" Label="Person"
+                              Variant="Variant.Outlined" ReadOnly="true" />
+                <MudTextField @bind-Value="_note" Label="Note *"
+                              Lines="5" Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="_source" Label="Source"
+                              Variant="Variant.Outlined" />
+                <MudDatePicker @bind-Date="_createdDate" Label="Date" Variant="Variant.Outlined" />
+                @if (_item.CommunicatedDate.HasValue)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true">
+                        Communicated on @_item.CommunicatedDate.Value.ToShortDateString()
+                    </MudAlert>
+                }
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Error" Variant="Variant.Text" OnClick="DeleteAsync">Delete</MudButton>
+        <MudSpacer />
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="_loading">
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int GlowGrowId { get; set; }
+
+    private bool _loading = true;
+    private GlowGrow? _item;
+    private string _note = "";
+    private string _source = "";
+    private DateTime? _createdDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _item = await db.GlowsGrows.Include(g => g.Person).FirstOrDefaultAsync(g => g.GlowGrowId == GlowGrowId);
+        if (_item is not null)
+        {
+            _note = _item.Note;
+            _source = _item.Source ?? "";
+            _createdDate = _item.CreatedDate;
+        }
+        _loading = false;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_note)) { Snackbar.Add("Note is required.", Severity.Warning); return; }
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var item = await db.GlowsGrows.FindAsync(GlowGrowId);
+            if (item is not null)
+            {
+                item.Note = _note.Trim();
+                item.Source = string.IsNullOrWhiteSpace(_source) ? null : _source.Trim();
+                item.CreatedDate = _createdDate ?? item.CreatedDate;
+                await db.SaveChangesAsync();
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var item = await db.GlowsGrows.FindAsync(GlowGrowId);
+            if (item is not null) db.GlowsGrows.Remove(item);
+            await db.SaveChangesAsync();
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

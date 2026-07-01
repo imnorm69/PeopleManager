@@ -1,0 +1,84 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Team Assignment</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
+            <MudAutocomplete T="string" Label="Team *" @bind-Value="_teamName"
+                             SearchFunc="SearchTeams" Required="true" RequiredError="Team is required."
+                             Variant="Variant.Outlined"
+                             Placeholder="Select existing or type new team name" />
+            <MudDatePicker @bind-Date="_effectiveDate" Label="Effective Date *"
+                           Required="true" RequiredError="Effective date is required."
+                           Variant="Variant.Outlined" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int PersonId { get; set; }
+
+    private MudForm _form = null!;
+    private string _teamName = "";
+    private DateTime? _effectiveDate = DateTime.Today;
+    private List<string> _existingTeams = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _existingTeams = await db.ProjectTeams
+            .OrderBy(t => t.Name)
+            .Select(t => t.Name)
+            .ToListAsync();
+    }
+
+    private Task<IEnumerable<string>> SearchTeams(string value, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Task.FromResult(_existingTeams.AsEnumerable());
+        return Task.FromResult(
+            _existingTeams.Where(t => t.Contains(value, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid || string.IsNullOrWhiteSpace(_teamName)) return;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var team = await db.ProjectTeams.FirstOrDefaultAsync(t => t.Name == _teamName.Trim());
+            if (team is null)
+            {
+                team = new ProjectTeam { Name = _teamName.Trim() };
+                db.ProjectTeams.Add(team);
+                await db.SaveChangesAsync();
+            }
+            db.PersonProjectAssignments.Add(new PersonProjectAssignment
+            {
+                PersonId = PersonId,
+                ProjectTeamId = team.ProjectTeamId,
+                AssignedDate = DateTime.Today,
+                EffectiveDate = _effectiveDate ?? DateTime.Today
+            });
+            await db.SaveChangesAsync();
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

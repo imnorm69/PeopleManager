@@ -1,0 +1,76 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Style="color:#27ae60;">Re-hire Employee</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.subtitle1" GutterBottom="true">@PersonName</MudText>
+        <MudForm @ref="_form" Class="d-flex flex-column gap-4">
+            <MudDatePicker @bind-Date="_hireDate" Label="New Start Date *"
+                           Required="true" RequiredError="Start date is required."
+                           Variant="Variant.Outlined" />
+            <MudTextField @bind-Value="_newTitle" Label="New Job Title *"
+                          Required="true" RequiredError="Job title is required."
+                          Variant="Variant.Outlined" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="SubmitAsync">Re-hire</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int PersonId { get; set; }
+    [Parameter] public string PersonName { get; set; } = "";
+
+    private MudForm _form = null!;
+    private DateTime? _hireDate = DateTime.Today;
+    private string _newTitle = "";
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var person = await db.People.FindAsync(PersonId);
+            if (person is not null)
+            {
+                person.IsActive = true;
+                person.StartDate = _hireDate ?? DateTime.Today;
+
+                db.PersonEmploymentPeriods.Add(new PersonEmploymentPeriod
+                {
+                    PersonId = PersonId,
+                    HireDate = _hireDate ?? DateTime.Today
+                });
+
+                if (!string.IsNullOrWhiteSpace(_newTitle))
+                {
+                    db.PersonJobTitles.Add(new PersonJobTitle
+                    {
+                        PersonId = PersonId,
+                        Title = _newTitle.Trim(),
+                        EffectiveDate = _hireDate ?? DateTime.Today
+                    });
+                }
+
+                await db.SaveChangesAsync();
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

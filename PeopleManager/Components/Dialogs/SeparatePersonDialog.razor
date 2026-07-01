@@ -1,0 +1,83 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Style="color:#c0392b;">Separate Employee</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.subtitle1" GutterBottom="true">@PersonName</MudText>
+        <MudForm @ref="_form" Class="d-flex flex-column gap-4">
+            <MudDatePicker @bind-Date="_separationDate" Label="Separation Date *"
+                           Required="true" RequiredError="Separation date is required."
+                           Variant="Variant.Outlined" />
+            <MudSelect T="SeparationReason?" @bind-Value="_reason" Label="Reason *"
+                       Required="true" RequiredError="Reason is required."
+                       Variant="Variant.Outlined">
+                <MudSelectItem T="SeparationReason?" Value="SeparationReason.EndOfInternship">End of Internship</MudSelectItem>
+                <MudSelectItem T="SeparationReason?" Value="SeparationReason.VoluntaryResignation">Voluntary Resignation</MudSelectItem>
+                <MudSelectItem T="SeparationReason?" Value="SeparationReason.Termination">Termination</MudSelectItem>
+                <MudSelectItem T="SeparationReason?" Value="SeparationReason.Other">Other</MudSelectItem>
+            </MudSelect>
+            <MudTextField @bind-Value="_notes" Label="@(_reason == SeparationReason.Other ? "Notes *" : "Notes")"
+                          Lines="4" Variant="Variant.Outlined"
+                          Required="@(_reason == SeparationReason.Other)"
+                          RequiredError="Notes are required when reason is Other." />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="SubmitAsync">Separate</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int PersonId { get; set; }
+    [Parameter] public string PersonName { get; set; } = "";
+
+    private MudForm _form = null!;
+    private DateTime? _separationDate = DateTime.Today;
+    private SeparationReason? _reason;
+    private string _notes = "";
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid || _reason is null) return;
+        if (_reason == SeparationReason.Other && string.IsNullOrWhiteSpace(_notes))
+        {
+            Snackbar.Add("Notes are required when reason is Other.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var person = await db.People.FindAsync(PersonId);
+            if (person is not null)
+            {
+                person.IsActive = false;
+                var period = await db.PersonEmploymentPeriods
+                    .Where(p => p.PersonId == PersonId && p.SeparationDate == null)
+                    .OrderByDescending(p => p.HireDate)
+                    .FirstOrDefaultAsync();
+                if (period is not null)
+                {
+                    period.SeparationDate = _separationDate;
+                    period.SeparationReason = _reason;
+                    period.SeparationNotes = string.IsNullOrWhiteSpace(_notes) ? null : _notes.Trim();
+                }
+                await db.SaveChangesAsync();
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

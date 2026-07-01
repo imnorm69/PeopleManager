@@ -1,0 +1,86 @@
+@page "/people"
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+
+<PageTitle>People — People Manager</PageTitle>
+
+<div class="d-flex align-center gap-3 mb-4">
+    <MudText Typo="Typo.h5">People</MudText>
+    <MudSpacer />
+    <MudCheckBox @bind-Value="_showInactive" Label="Show Inactive" Color="Color.Primary" Dense="true" />
+    <MudButton Variant="Variant.Filled" Color="Color.Success"
+               StartIcon="@Icons.Material.Filled.PersonAdd"
+               OnClick="AddPersonAsync">
+        Add Person
+    </MudButton>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="@FilteredPeople" Hover="true" Dense="false" Elevation="2"
+              T="Person" OnRowClick="OnRowClick" RowClass="cursor-pointer">
+        <HeaderContent>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<Person,object>(p => p.LastName + p.FirstName)">
+                    Name
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>Current Title</MudTh>
+            <MudTh>Start Date</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.DisplayName</MudTd>
+            <MudTd DataLabel="Current Title">@GetCurrentTitle(context)</MudTd>
+            <MudTd DataLabel="Start Date">@context.StartDate.ToShortDateString()</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Default)"
+                         Size="Size.Small" Variant="Variant.Filled" Label="true">
+                    @(context.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _showInactive;
+    private List<Person> _people = new();
+
+    private IEnumerable<Person> FilteredPeople =>
+        _showInactive ? _people : _people.Where(p => p.IsActive);
+
+    private static string GetCurrentTitle(Person p) =>
+        p.JobTitles.OrderByDescending(t => t.EffectiveDate).FirstOrDefault()?.Title ?? "—";
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _people = await db.People
+            .Include(p => p.JobTitles)
+            .OrderBy(p => p.LastName)
+            .ThenBy(p => p.FirstName)
+            .ToListAsync();
+        _loading = false;
+    }
+
+    private void OnRowClick(TableRowClickEventArgs<Person> args) =>
+        Nav.NavigateTo($"/people/{args.Item!.PersonId}");
+
+    private async Task AddPersonAsync()
+    {
+        var dialog = await DialogService.ShowAsync<AddEditPersonDialog>("Add Person");
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+            await LoadAsync();
+    }
+}

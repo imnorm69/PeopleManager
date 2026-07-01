@@ -1,0 +1,63 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Checklist Question</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
+            <MudTextField @bind-Value="_description" Label="Question *"
+                          Required="true" RequiredError="Question text is required."
+                          Lines="2" Variant="Variant.Outlined" />
+            <MudSelect T="ChecklistValueType" @bind-Value="_valueType" Label="Answer Type"
+                       Variant="Variant.Outlined">
+                <MudSelectItem T="ChecklistValueType" Value="ChecklistValueType.YesNo">Yes / No</MudSelectItem>
+                <MudSelectItem T="ChecklistValueType" Value="ChecklistValueType.Integer">Integer</MudSelectItem>
+                <MudSelectItem T="ChecklistValueType" Value="ChecklistValueType.Percentage">Percentage</MudSelectItem>
+                <MudSelectItem T="ChecklistValueType" Value="ChecklistValueType.Text">Text</MudSelectItem>
+                <MudSelectItem T="ChecklistValueType" Value="ChecklistValueType.Date">Date</MudSelectItem>
+            </MudSelect>
+            <MudNumericField T="int" @bind-Value="_sortOrder" Label="Sort Order"
+                             Variant="Variant.Outlined" Min="0" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="SubmitAsync">Add</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private MudForm _form = null!;
+    private string _description = "";
+    private ChecklistValueType _valueType = ChecklistValueType.YesNo;
+    private int _sortOrder = 100;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            db.ChecklistQuestions.Add(new ChecklistQuestion
+            {
+                Description = _description.Trim(),
+                ValueType = _valueType,
+                SortOrder = _sortOrder
+            });
+            await db.SaveChangesAsync();
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

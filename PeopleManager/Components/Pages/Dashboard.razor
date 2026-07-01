@@ -1,0 +1,72 @@
+@page "/"
+@inject IDbContextFactory<AppDbContext> DbFactory
+
+<PageTitle>Dashboard — People Manager</PageTitle>
+
+<MudText Typo="Typo.h5" GutterBottom="true">Open Action Items</MudText>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Class="mt-4" />
+}
+else if (_items.Count == 0)
+{
+    <MudAlert Severity="Severity.Success" Class="mt-4">
+        No open action items — all caught up!
+    </MudAlert>
+}
+else
+{
+    <MudTable Items="_items" Hover="true" Dense="true" Striped="true" Elevation="2">
+        <HeaderContent>
+            <MudTh>Person</MudTh>
+            <MudTh>Description</MudTh>
+            <MudTh>Assigned To</MudTh>
+            <MudTh>Due</MudTh>
+            <MudTh>Added</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Person">
+                <MudLink Href="@($"/people/{context.PersonId}")" Color="Color.Primary">
+                    @context.Person.DisplayName
+                </MudLink>
+            </MudTd>
+            <MudTd DataLabel="Description" Style="white-space:normal;max-width:500px;">
+                @context.Description
+            </MudTd>
+            <MudTd DataLabel="Assigned To">
+                @(context.AssignedTo == ActionItemAssignee.Me ? "Me" : context.Person.FirstName)
+            </MudTd>
+            <MudTd DataLabel="Due">
+                <MudText Color="@(IsOverdue(context) ? Color.Error : Color.Default)"
+                         Style="@($"font-weight:{(IsOverdue(context) ? "600" : "normal")}")">
+                    @context.DueDate.ToShortDateString()
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Added">
+                @context.CreatedDate.ToShortDateString()
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private bool _loading = true;
+    private List<ActionItem> _items = new();
+
+    private static bool IsOverdue(ActionItem a) =>
+        !a.IsComplete && a.DueDate < DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _items = await db.ActionItems
+            .Include(a => a.Person)
+            .Where(a => !a.IsComplete)
+            .OrderBy(a => (int)a.AssignedTo)
+            .ThenBy(a => a.DueDate)
+            .ThenBy(a => a.Person.LastName)
+            .ToListAsync();
+        _loading = false;
+    }
+}

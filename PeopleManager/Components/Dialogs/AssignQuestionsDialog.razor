@@ -1,0 +1,139 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Assign Questions to Person</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
+            <MudSelect T="int" Value="_personId" ValueChanged="PersonChangedAsync" Label="Person *"
+                       Required="true" RequiredError="Person is required."
+                       Variant="Variant.Outlined">
+                @foreach (var p in _people)
+                {
+                    <MudSelectItem T="int" Value="p.PersonId">@p.DisplayName</MudSelectItem>
+                }
+            </MudSelect>
+
+            @if (_questions.Count > 0 && _personId > 0)
+            {
+                <MudText Typo="Typo.subtitle2" Class="mt-2">Questions</MudText>
+                @foreach (var q in _questions)
+                {
+                    <div class="d-flex align-center gap-3">
+                        <MudCheckBox @bind-Value="q.Assigned" Dense="true" Color="Color.Primary" />
+                        <MudText Style="flex:1;">@q.Question.Description</MudText>
+                        @if (q.Assigned)
+                        {
+                            <MudSelect T="CheckFrequency" @bind-Value="q.Frequency" Dense="true"
+                                       Variant="Variant.Outlined" Style="max-width:150px;" Margin="Margin.Dense">
+                                @foreach (CheckFrequency f in Enum.GetValues<CheckFrequency>())
+                                {
+                                    <MudSelectItem T="CheckFrequency" Value="f">@f</MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
+                    </div>
+                }
+            }
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private MudForm _form = null!;
+    private int _personId;
+    private List<Person> _people = new();
+    private List<QuestionRow> _questions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _people = await db.People
+            .Where(p => p.IsActive)
+            .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
+            .ToListAsync();
+    }
+
+    private async Task PersonChangedAsync(int personId)
+    {
+        _personId = personId;
+        if (personId == 0) return;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var allQuestions = await db.ChecklistQuestions.OrderBy(q => q.SortOrder).ToListAsync();
+        var existing = await db.PersonQuestionAssignments
+            .Where(a => a.PersonId == personId)
+            .ToListAsync();
+
+        _questions = allQuestions.Select(q =>
+        {
+            var assignment = existing.FirstOrDefault(a => a.QuestionId == q.QuestionId);
+            return new QuestionRow(q)
+            {
+                Assigned = assignment is not null,
+                Frequency = assignment?.Frequency ?? CheckFrequency.Monthly
+            };
+        }).ToList();
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SaveAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid || _personId == 0) return;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var existing = await db.PersonQuestionAssignments
+                .Where(a => a.PersonId == _personId)
+                .ToListAsync();
+
+            foreach (var row in _questions)
+            {
+                var current = existing.FirstOrDefault(a => a.QuestionId == row.Question.QuestionId);
+                if (row.Assigned && current is null)
+                {
+                    db.PersonQuestionAssignments.Add(new PersonQuestionAssignment
+                    {
+                        PersonId = _personId,
+                        QuestionId = row.Question.QuestionId,
+                        Frequency = row.Frequency,
+                        AssignedDate = DateTime.Today
+                    });
+                }
+                else if (row.Assigned && current is not null)
+                {
+                    current.Frequency = row.Frequency;
+                }
+                else if (!row.Assigned && current is not null)
+                {
+                    db.PersonQuestionAssignments.Remove(current);
+                }
+            }
+
+            await db.SaveChangesAsync();
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private sealed class QuestionRow(ChecklistQuestion question)
+    {
+        public ChecklistQuestion Question { get; } = question;
+        public bool Assigned { get; set; }
+        public CheckFrequency Frequency { get; set; } = CheckFrequency.Monthly;
+    }
+}

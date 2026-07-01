@@ -1,0 +1,55 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.EventNote" Class="mr-2" />
+            New 1:1 Meeting
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
+            <MudSelect T="int" @bind-Value="_personId" Label="Person *"
+                       Required="true" RequiredError="Person is required."
+                       Variant="Variant.Outlined">
+                @foreach (var p in _people)
+                {
+                    <MudSelectItem T="int" Value="p.PersonId">@p.DisplayName</MudSelectItem>
+                }
+            </MudSelect>
+            <MudDatePicker @bind-Date="_date" Label="Date *" Variant="Variant.Outlined"
+                           Required="true" RequiredError="Date is required." />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync">OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private MudForm _form = null!;
+    private int _personId;
+    private DateTime? _date = DateTime.Today;
+    private List<Person> _people = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _people = await db.People
+            .Where(p => p.IsActive)
+            .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
+            .ToListAsync();
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid || _personId == 0) return;
+        MudDialog.Close(DialogResult.Ok((_personId, _date ?? DateTime.Today)));
+    }
+}

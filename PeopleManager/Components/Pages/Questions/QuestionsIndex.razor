@@ -1,0 +1,80 @@
+@page "/questions"
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IDialogService DialogService
+
+<PageTitle>Questions — People Manager</PageTitle>
+
+<div class="d-flex align-center gap-3 mb-4">
+    <MudText Typo="Typo.h5">Checklist Questions</MudText>
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled" Color="Color.Success"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="AddQuestionAsync">
+        Add Question
+    </MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.AssignmentInd"
+               OnClick="AssignQuestionsAsync">
+        Assign to Person
+    </MudButton>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="_questions" Hover="true" Dense="false" Elevation="2">
+        <HeaderContent>
+            <MudTh>Order</MudTh>
+            <MudTh>Description</MudTh>
+            <MudTh>Value Type</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Order">@context.SortOrder</MudTd>
+            <MudTd DataLabel="Description" Style="white-space:normal">@context.Description</MudTd>
+            <MudTd DataLabel="Value Type">@FormatValueType(context.ValueType)</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private bool _loading = true;
+    private List<ChecklistQuestion> _questions = new();
+
+    private static string FormatValueType(ChecklistValueType t) => t switch
+    {
+        ChecklistValueType.YesNo => "Yes / No",
+        ChecklistValueType.Integer => "Integer",
+        ChecklistValueType.Percentage => "Percentage",
+        ChecklistValueType.Text => "Text",
+        ChecklistValueType.Date => "Date",
+        _ => t.ToString()
+    };
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _questions = await db.ChecklistQuestions
+            .OrderBy(q => q.SortOrder)
+            .ToListAsync();
+        _loading = false;
+    }
+
+    private async Task AddQuestionAsync()
+    {
+        var dialog = await DialogService.ShowAsync<AddChecklistQuestionDialog>("Add Question");
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+
+    private async Task AssignQuestionsAsync()
+    {
+        var dialog = await DialogService.ShowAsync<AssignQuestionsDialog>("Assign Questions");
+        await dialog.Result;
+    }
+}

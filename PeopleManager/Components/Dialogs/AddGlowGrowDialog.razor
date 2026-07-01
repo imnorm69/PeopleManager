@@ -1,0 +1,91 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Glow / Grow</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
+            <MudSelect T="int" @bind-Value="_personId" Label="Person *"
+                       Required="true" RequiredError="Person is required."
+                       Variant="Variant.Outlined">
+                @foreach (var p in _people)
+                {
+                    <MudSelectItem T="int" Value="p.PersonId">@p.DisplayName</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="GlowGrowType" @bind-Value="_type" Label="Type *" Variant="Variant.Outlined">
+                <MudSelectItem T="GlowGrowType" Value="GlowGrowType.Glow">
+                    <span style="color:#27ae60;font-weight:600;">Glow</span>
+                </MudSelectItem>
+                <MudSelectItem T="GlowGrowType" Value="GlowGrowType.Grow">
+                    <span style="color:#c0392b;font-weight:600;">Grow</span>
+                </MudSelectItem>
+            </MudSelect>
+            <MudTextField @bind-Value="_note" Label="Note *"
+                          Required="true" RequiredError="Note is required."
+                          Lines="4" Variant="Variant.Outlined" />
+            <MudTextField @bind-Value="_source" Label="Source"
+                          Variant="Variant.Outlined"
+                          Placeholder="Optional — who or what inspired this?" />
+            <MudDatePicker @bind-Date="_createdDate" Label="Date *"
+                           Required="true" Variant="Variant.Outlined" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="SubmitAsync">Add</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int PreselectedPersonId { get; set; }
+
+    private MudForm _form = null!;
+    private int _personId;
+    private GlowGrowType _type = GlowGrowType.Glow;
+    private string _note = "";
+    private string _source = "";
+    private DateTime? _createdDate = DateTime.Today;
+    private List<Person> _people = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _people = await db.People
+            .Where(p => p.IsActive)
+            .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
+            .ToListAsync();
+        _personId = PreselectedPersonId > 0 ? PreselectedPersonId : (_people.FirstOrDefault()?.PersonId ?? 0);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid || _personId == 0) return;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            db.GlowsGrows.Add(new GlowGrow
+            {
+                PersonId = _personId,
+                Type = _type,
+                Note = _note.Trim(),
+                Source = string.IsNullOrWhiteSpace(_source) ? null : _source.Trim(),
+                CreatedDate = _createdDate ?? DateTime.Today
+            });
+            await db.SaveChangesAsync();
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

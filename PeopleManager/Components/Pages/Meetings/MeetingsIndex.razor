@@ -1,0 +1,86 @@
+@page "/meetings"
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IDialogService DialogService
+@inject NavigationManager Nav
+
+<PageTitle>Meetings — People Manager</PageTitle>
+
+<div class="d-flex align-center gap-3 mb-4 flex-wrap">
+    <MudText Typo="Typo.h5">1:1 Meetings</MudText>
+    <MudSpacer />
+    <MudSelect T="int?" @bind-Value="_personFilter" Label="Filter by Person"
+               Style="min-width:200px;" Clearable="true" Dense="true" Variant="Variant.Outlined">
+        @foreach (var p in _people)
+        {
+            <MudSelectItem T="int?" Value="@((int?)p.PersonId)">@p.DisplayName</MudSelectItem>
+        }
+    </MudSelect>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="NewMeetingAsync">
+        New Meeting
+    </MudButton>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="@FilteredMeetings" Hover="true" Dense="false" Elevation="2"
+              T="Meeting"
+              OnRowClick="@(args => Nav.NavigateTo($"/meetings/{args.Item!.MeetingId}"))"
+              RowClass="cursor-pointer">
+        <HeaderContent>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<Meeting,object>(m => m.Person.LastName)">
+                    Person
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel InitialDirection="SortDirection.Descending"
+                                   SortBy="new Func<Meeting,object>(m => m.MeetingDate)">
+                    Date
+                </MudTableSortLabel>
+            </MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Person">@context.Person.DisplayName</MudTd>
+            <MudTd DataLabel="Date">@context.MeetingDate.ToLongDateString()</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private bool _loading = true;
+    private int? _personFilter;
+    private List<Meeting> _meetings = new();
+    private List<Person> _people = new();
+
+    private IEnumerable<Meeting> FilteredMeetings =>
+        _personFilter.HasValue ? _meetings.Where(m => m.PersonId == _personFilter) : _meetings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _meetings = await db.Meetings
+            .Include(m => m.Person)
+            .OrderByDescending(m => m.MeetingDate)
+            .ThenBy(m => m.Person.LastName)
+            .ToListAsync();
+        _people = _meetings.Select(m => m.Person)
+            .DistinctBy(p => p.PersonId)
+            .OrderBy(p => p.DisplayName)
+            .ToList();
+        _loading = false;
+    }
+
+    private async Task NewMeetingAsync()
+    {
+        var dialog = await DialogService.ShowAsync<NewMeetingDialog>("New 1:1 Meeting");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: (int pid, DateTime date) })
+            Nav.NavigateTo($"/meetings/new?personId={pid}&date={date:yyyy-MM-dd}");
+    }
+}

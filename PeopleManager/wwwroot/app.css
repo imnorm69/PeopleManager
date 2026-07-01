@@ -1,0 +1,20 @@
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.mud-table-row:hover {
+    background-color: rgba(0,0,0,0.04);
+    cursor: pointer;
+}
+
+.nav-link-white .mud-nav-link-text {
+    color: rgba(255,255,255,0.9) !important;
+}
+
+.nav-link-white:hover {
+    background: rgba(255,255,255,0.1) !important;
+}
+
+.note-tab {
+    min-height: 300px;
+}

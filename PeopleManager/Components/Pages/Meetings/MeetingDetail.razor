@@ -1,0 +1,569 @@
+@page "/meetings/new"
+@page "/meetings/{MeetingId:int}"
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>Meeting — People Manager</PageTitle>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_person is null)
+{
+    <MudAlert Severity="Severity.Error">Could not load meeting data.</MudAlert>
+}
+else
+{
+    <MudPaper Elevation="0" Style="background:#1e3a5f;border-radius:8px;" Class="pa-4 mb-4">
+        <div class="d-flex align-center flex-wrap gap-3">
+            <div>
+                <MudText Typo="Typo.h5" Style="color:white;">@_person.DisplayName</MudText>
+                <MudText Typo="Typo.subtitle1" Style="color:rgba(255,255,255,0.75);">
+                    1:1 — @_meetingDate.ToLongDateString()
+                </MudText>
+            </div>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Success"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveAsync" Disabled="_saving">
+                @(_saving ? "Saving…" : "Save Meeting")
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Style="color:white;border-color:rgba(255,255,255,0.5);"
+                       OnClick="@(() => Nav.NavigateTo("/meetings"))">
+                Close
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <MudGrid>
+        <!-- Left column: notes + checklist + action items -->
+        <MudItem xs="12" lg="9">
+            <MudPaper Elevation="2" Class="mb-4">
+                <MudTabs Elevation="0" Rounded="false" PanelClass="pa-4">
+                    <MudTabPanel Text="Project Notes">
+                        <MudTextField @bind-Value="_notes[MeetingNoteCategory.ProjectNotes]"
+                                      Lines="16" Variant="Variant.Outlined" FullWidth="true"
+                                      Placeholder="Project notes…" Class="note-tab" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="Career Updates">
+                        <MudTextField @bind-Value="_notes[MeetingNoteCategory.CareerUpdates]"
+                                      Lines="16" Variant="Variant.Outlined" FullWidth="true"
+                                      Placeholder="Career updates…" Class="note-tab" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="Training">
+                        <MudTextField @bind-Value="_notes[MeetingNoteCategory.TrainingUpdates]"
+                                      Lines="16" Variant="Variant.Outlined" FullWidth="true"
+                                      Placeholder="Training updates…" Class="note-tab" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="General Notes">
+                        <MudTextField @bind-Value="_notes[MeetingNoteCategory.GlowsGrows]"
+                                      Lines="16" Variant="Variant.Outlined" FullWidth="true"
+                                      Placeholder="General notes…" Class="note-tab" />
+                    </MudTabPanel>
+                    <MudTabPanel Text="Checklist">
+                        @if (_checklist.Count == 0)
+                        {
+                            <MudText Color="Color.Secondary">No checklist items assigned to this person.</MudText>
+                        }
+                        else
+                        {
+                            <MudSimpleTable Dense="true" Hover="true" Style="overflow:hidden;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:55%">Question</th>
+                                        <th style="width:15%;text-align:center;">Frequency</th>
+                                        <th style="width:30%">Answer</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var entry in _checklist)
+                                    {
+                                        <tr>
+                                            <td>@entry.Description</td>
+                                            <td style="text-align:center;">
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                    @entry.FrequencyLabel
+                                                </MudText>
+                                            </td>
+                                            <td>
+                                                @if (entry.ValueType == ChecklistValueType.YesNo)
+                                                {
+                                                    <MudSelect T="string?" @bind-Value="entry.Answer"
+                                                               Dense="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+                                                        <MudSelectItem T="string?" Value="@((string?)null)">—</MudSelectItem>
+                                                        <MudSelectItem T="string?" Value='"Yes"'>Yes</MudSelectItem>
+                                                        <MudSelectItem T="string?" Value='"No"'>No</MudSelectItem>
+                                                    </MudSelect>
+                                                }
+                                                else if (entry.ValueType == ChecklistValueType.Date)
+                                                {
+                                                    <MudTextField @bind-Value="entry.Answer"
+                                                                  InputType="InputType.Date"
+                                                                  Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                                }
+                                                else
+                                                {
+                                                    <MudTextField @bind-Value="entry.Answer"
+                                                                  InputType="@(entry.ValueType is ChecklistValueType.Integer or ChecklistValueType.Percentage ? InputType.Number : InputType.Text)"
+                                                                  Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                                  Adornment="@(entry.ValueType == ChecklistValueType.Percentage ? Adornment.End : Adornment.None)"
+                                                                  AdornmentText="%" />
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        }
+                    </MudTabPanel>
+                </MudTabs>
+            </MudPaper>
+
+            <!-- Action Items -->
+            <MudPaper Elevation="2">
+                <MudTabs Elevation="0" PanelClass="pa-4">
+                    <MudTabPanel Text="Action Items">
+                        <div class="d-flex gap-2 mb-3 flex-wrap">
+                            <MudButton Variant="Variant.Filled" Color="Color.Success"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="AddActionItemAsync" Size="Size.Small">
+                                Add
+                            </MudButton>
+                            @if (_selectedActionItem is not null && !_selectedActionItem.IsComplete)
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.CheckCircle"
+                                           OnClick="CompleteActionItemAsync" Size="Size.Small">
+                                    Complete
+                                </MudButton>
+                            }
+                            @if (_selectedActionItem is not null)
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Error"
+                                           StartIcon="@Icons.Material.Filled.Delete"
+                                           OnClick="DeleteActionItemAsync" Size="Size.Small">
+                                    Delete
+                                </MudButton>
+                            }
+                            <MudSpacer />
+                            <MudCheckBox @bind-Value="_showAllAI" Label="Show Completed" Dense="true" />
+                        </div>
+                        <MudTable Items="@FilteredActionItems" T="ActionItem"
+                                  @bind-SelectedItem="_selectedActionItem"
+                                  Hover="true" Dense="true" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Added</MudTh>
+                                <MudTh>Assigned To</MudTh>
+                                <MudTh>Description</MudTh>
+                                <MudTh>Due</MudTh>
+                                <MudTh></MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd>@context.CreatedDate.ToShortDateString()</MudTd>
+                                <MudTd>@(context.AssignedTo == ActionItemAssignee.Me ? "Me" : _person.FirstName)</MudTd>
+                                <MudTd Style="white-space:normal;max-width:340px;">@context.Description</MudTd>
+                                <MudTd>
+                                    <MudText Color="@(IsOverdue(context) ? Color.Error : Color.Default)">
+                                        @context.DueDate.ToShortDateString()
+                                    </MudText>
+                                </MudTd>
+                                <MudTd>
+                                    @if (context.IsComplete)
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                                    }
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudTabPanel>
+
+                    <MudTabPanel Text="Mentions">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-2 d-block">
+                            Open action items from other meetings that mention @_person.FirstName
+                        </MudText>
+                        @if (_mentions.Count == 0)
+                        {
+                            <MudText Color="Color.Secondary">No mentions.</MudText>
+                        }
+                        else
+                        {
+                            <MudTable Items="_mentions" T="ActionItem" Dense="true" Hover="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>For Person</MudTh>
+                                    <MudTh>Description</MudTh>
+                                    <MudTh>Due</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@context.Person.DisplayName</MudTd>
+                                    <MudTd Style="white-space:normal">@context.Description</MudTd>
+                                    <MudTd>
+                                        <MudText Color="@(IsOverdue(context) ? Color.Error : Color.Default)">
+                                            @context.DueDate.ToShortDateString()
+                                        </MudText>
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        }
+                    </MudTabPanel>
+                </MudTabs>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Right column: Glows & Grows -->
+        <MudItem xs="12" lg="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.subtitle1" Style="color:#27ae60;font-weight:700;" GutterBottom="true">
+                    <MudIcon Icon="@Icons.Material.Filled.StarRate" Size="Size.Small" Style="color:#27ae60;" />
+                    Glows (@_glows.Count)
+                </MudText>
+                @if (_glows.Count == 0)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">None uncommunicated.</MudText>
+                }
+                @foreach (var g in _glows)
+                {
+                    <div class="d-flex align-start gap-1 mb-1">
+                        <MudCheckBox @bind-Value="g.Selected" Color="Color.Success" Dense="true" Class="mt-0 pt-0" />
+                        <MudText Style="font-size:0.82rem;line-height:1.4;cursor:pointer;"
+                                 @onclick="@(() => OpenGlowGrowDetailAsync(g.Item))">
+                            @Truncate(g.Item.Note, 90)
+                        </MudText>
+                    </div>
+                }
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.subtitle1" Style="color:#c0392b;font-weight:700;" GutterBottom="true">
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Small" Style="color:#c0392b;" />
+                    Grows (@_grows.Count)
+                </MudText>
+                @if (_grows.Count == 0)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">None uncommunicated.</MudText>
+                }
+                @foreach (var g in _grows)
+                {
+                    <div class="d-flex align-start gap-1 mb-1">
+                        <MudCheckBox @bind-Value="g.Selected" Color="Color.Error" Dense="true" Class="mt-0 pt-0" />
+                        <MudText Style="font-size:0.82rem;line-height:1.4;cursor:pointer;"
+                                 @onclick="@(() => OpenGlowGrowDetailAsync(g.Item))">
+                            @Truncate(g.Item.Note, 90)
+                        </MudText>
+                    </div>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Parameter] public int MeetingId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "personId")]
+    public int QueryPersonId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "date")]
+    public string? QueryDate { get; set; }
+
+    private bool _loading = true;
+    private bool _saving;
+    private Person? _person;
+    private DateTime _meetingDate;
+    private int? _meetingId;
+    private bool _showAllAI;
+    private ActionItem? _selectedActionItem;
+
+    private Dictionary<MeetingNoteCategory, string> _notes = new()
+    {
+        [MeetingNoteCategory.ProjectNotes]    = "",
+        [MeetingNoteCategory.CareerUpdates]   = "",
+        [MeetingNoteCategory.TrainingUpdates] = "",
+        [MeetingNoteCategory.GlowsGrows]      = "",
+    };
+
+    private List<GlowGrowSel> _glows = new();
+    private List<GlowGrowSel> _grows = new();
+    private List<ActionItem> _actionItems = new();
+    private List<ActionItem> _mentions = new();
+    private List<ChecklistEntry> _checklist = new();
+
+    private IEnumerable<ActionItem> FilteredActionItems =>
+        _showAllAI ? _actionItems : _actionItems.Where(a => !a.IsComplete);
+
+    private static bool IsOverdue(ActionItem a) =>
+        !a.IsComplete && a.DueDate < DateTime.Today;
+
+    private static string Truncate(string s, int max) =>
+        s.Length > max ? s[..max] + "…" : s;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        if (MeetingId > 0)
+        {
+            var meeting = await db.Meetings.Include(m => m.Person).FirstOrDefaultAsync(m => m.MeetingId == MeetingId);
+            if (meeting is null) { _loading = false; return; }
+            _meetingId = meeting.MeetingId;
+            _meetingDate = meeting.MeetingDate;
+            _person = meeting.Person;
+
+            foreach (var note in await db.MeetingNotes.Where(n => n.MeetingId == MeetingId).ToListAsync())
+                _notes[note.Category] = note.NoteText ?? "";
+        }
+        else
+        {
+            _person = await db.People.FindAsync(QueryPersonId);
+            _meetingDate = DateTime.TryParse(QueryDate, out var d) ? d : DateTime.Today;
+        }
+
+        if (_person is null) { _loading = false; return; }
+
+        await LoadGlowsGrowsAsync(db);
+        await LoadActionItemsAsync(db);
+        await LoadChecklistAsync(db);
+        await LoadMentionsAsync(db);
+
+        _loading = false;
+    }
+
+    private async Task LoadGlowsGrowsAsync(AppDbContext db)
+    {
+        var items = await db.GlowsGrows
+            .Where(g => g.PersonId == _person!.PersonId && g.CommunicatedDate == null)
+            .OrderBy(g => g.CreatedDate)
+            .ToListAsync();
+
+        _glows = items.Where(g => g.Type == GlowGrowType.Glow)
+            .Select(g => new GlowGrowSel(g)).ToList();
+        _grows = items.Where(g => g.Type == GlowGrowType.Grow)
+            .Select(g => new GlowGrowSel(g)).ToList();
+    }
+
+    private async Task LoadActionItemsAsync(AppDbContext db)
+    {
+        _actionItems = await db.ActionItems
+            .Where(a => a.PersonId == _person!.PersonId)
+            .OrderBy(a => a.IsComplete)
+            .ThenBy(a => a.DueDate)
+            .ToListAsync();
+    }
+
+    private async Task LoadChecklistAsync(AppDbContext db)
+    {
+        if (_person is null) return;
+
+        var assignments = await db.PersonQuestionAssignments
+            .Include(a => a.Question)
+            .Where(a => a.PersonId == _person.PersonId)
+            .OrderBy(a => a.Question.SortOrder)
+            .ToListAsync();
+
+        var meetingEvals = _meetingId.HasValue
+            ? await db.ChecklistItemEvaluations
+                .Where(e => e.MeetingId == _meetingId)
+                .ToListAsync()
+            : new List<ChecklistItemEvaluation>();
+
+        _checklist = assignments.Select(a =>
+        {
+            var eval = meetingEvals.FirstOrDefault(e => e.QuestionId == a.QuestionId);
+            return new ChecklistEntry(
+                a.QuestionId,
+                a.Question.Description,
+                a.Question.ValueType,
+                FormatFrequency(a.Frequency))
+            { Answer = eval?.Value };
+        }).ToList();
+    }
+
+    private async Task LoadMentionsAsync(AppDbContext db)
+    {
+        if (_person is null) return;
+        var firstName = _person.FirstName;
+        _mentions = await db.ActionItems
+            .Include(a => a.Person)
+            .Where(a => a.PersonId != _person.PersonId
+                        && !a.IsComplete
+                        && a.Description.Contains(firstName))
+            .OrderBy(a => a.DueDate)
+            .ToListAsync();
+    }
+
+    private static string FormatFrequency(CheckFrequency f) => f switch
+    {
+        CheckFrequency.Weekly => "Weekly",
+        CheckFrequency.BiWeekly => "Bi-weekly",
+        CheckFrequency.Monthly => "Monthly",
+        CheckFrequency.Quarterly => "Quarterly",
+        CheckFrequency.SemiAnnual => "Semi-annual",
+        CheckFrequency.Annual => "Annual",
+        _ => ""
+    };
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+
+            if (!_meetingId.HasValue)
+            {
+                var meeting = new Meeting
+                {
+                    PersonId = _person!.PersonId,
+                    MeetingDate = _meetingDate
+                };
+                db.Meetings.Add(meeting);
+                await db.SaveChangesAsync();
+                _meetingId = meeting.MeetingId;
+                Nav.NavigateTo($"/meetings/{_meetingId}", replace: true);
+            }
+
+            foreach (var (cat, text) in _notes)
+            {
+                var existing = await db.MeetingNotes
+                    .FirstOrDefaultAsync(n => n.MeetingId == _meetingId && n.Category == cat);
+                if (existing is null)
+                {
+                    if (!string.IsNullOrWhiteSpace(text))
+                        db.MeetingNotes.Add(new MeetingNote { MeetingId = _meetingId.Value, Category = cat, NoteText = text });
+                }
+                else
+                {
+                    existing.NoteText = text;
+                }
+            }
+
+            foreach (var entry in _checklist.Where(e => e.Answer is not null))
+            {
+                var eval = await db.ChecklistItemEvaluations
+                    .FirstOrDefaultAsync(e => e.MeetingId == _meetingId && e.QuestionId == entry.QuestionId);
+                if (eval is null)
+                {
+                    db.ChecklistItemEvaluations.Add(new ChecklistItemEvaluation
+                    {
+                        PersonId = _person!.PersonId,
+                        QuestionId = entry.QuestionId,
+                        MeetingId = _meetingId,
+                        EvaluatedDate = _meetingDate,
+                        Value = entry.Answer
+                    });
+                }
+                else
+                {
+                    eval.Value = entry.Answer;
+                    eval.EvaluatedDate = _meetingDate;
+                }
+            }
+
+            var now = DateTime.Now;
+            foreach (var sel in _glows.Concat(_grows).Where(s => s.Selected))
+            {
+                var gg = await db.GlowsGrows.FindAsync(sel.Item.GlowGrowId);
+                if (gg is not null) gg.CommunicatedDate = now;
+            }
+
+            await db.SaveChangesAsync();
+            Snackbar.Add("Meeting saved.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Save failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task AddActionItemAsync()
+    {
+        if (_meetingId is null) await EnsureMeetingSavedAsync();
+        var p = new DialogParameters<AddActionItemDialog>
+        {
+            { x => x.PersonId, _person!.PersonId },
+            { x => x.MeetingId, _meetingId!.Value },
+            { x => x.PersonFirstName, _person!.FirstName }
+        };
+        var dialog = await DialogService.ShowAsync<AddActionItemDialog>("Add Action Item", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            await LoadActionItemsAsync(db);
+        }
+    }
+
+    private async Task CompleteActionItemAsync()
+    {
+        if (_selectedActionItem is null) return;
+        var p = new DialogParameters<CompleteActionItemDialog>
+        {
+            { x => x.ActionItemId, _selectedActionItem.ActionItemId },
+            { x => x.MeetingId, _meetingId }
+        };
+        var dialog = await DialogService.ShowAsync<CompleteActionItemDialog>("Complete Action Item", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            await LoadActionItemsAsync(db);
+            _selectedActionItem = null;
+        }
+    }
+
+    private async Task DeleteActionItemAsync()
+    {
+        if (_selectedActionItem is null) return;
+        var confirmed = await DialogService.ShowMessageBox(
+            "Delete Action Item",
+            "Are you sure you want to delete this action item?",
+            yesText: "Delete", cancelText: "Cancel");
+        if (confirmed == true)
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var item = await db.ActionItems.FindAsync(_selectedActionItem.ActionItemId);
+            if (item is not null) db.ActionItems.Remove(item);
+            await db.SaveChangesAsync();
+            await LoadActionItemsAsync(db);
+            _selectedActionItem = null;
+        }
+    }
+
+    private async Task OpenGlowGrowDetailAsync(GlowGrow item)
+    {
+        var p = new DialogParameters<GlowGrowDetailDialog> { { x => x.GlowGrowId, item.GlowGrowId } };
+        await DialogService.ShowAsync<GlowGrowDetailDialog>(
+            item.Type == GlowGrowType.Glow ? "Glow Detail" : "Grow Detail", p);
+    }
+
+    private async Task EnsureMeetingSavedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var meeting = new Meeting { PersonId = _person!.PersonId, MeetingDate = _meetingDate };
+        db.Meetings.Add(meeting);
+        await db.SaveChangesAsync();
+        _meetingId = meeting.MeetingId;
+        Nav.NavigateTo($"/meetings/{_meetingId}", replace: true);
+    }
+
+    private sealed class GlowGrowSel(GlowGrow item)
+    {
+        public GlowGrow Item { get; } = item;
+        public bool Selected { get; set; }
+    }
+
+    private sealed class ChecklistEntry(int questionId, string description, ChecklistValueType valueType, string frequencyLabel)
+    {
+        public int QuestionId { get; } = questionId;
+        public string Description { get; } = description;
+        public ChecklistValueType ValueType { get; } = valueType;
+        public string FrequencyLabel { get; } = frequencyLabel;
+        public string? Answer { get; set; }
+    }
+}

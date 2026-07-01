@@ -1,0 +1,232 @@
+@page "/people/{PersonId:int}"
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>@(_person?.DisplayName ?? "Person") — People Manager</PageTitle>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_person is null)
+{
+    <MudAlert Severity="Severity.Error">Person not found.</MudAlert>
+}
+else
+{
+    <MudPaper Elevation="0" Style="background:#1e3a5f;border-radius:8px;" Class="pa-4 mb-4">
+        <div class="d-flex align-center flex-wrap gap-3">
+            <div>
+                <MudText Typo="Typo.h5" Style="color:white;">@_person.DisplayName</MudText>
+                <MudText Typo="Typo.subtitle1" Style="color:rgba(255,255,255,0.75);">
+                    @CurrentTitle — Started @_person.StartDate.ToShortDateString()
+                </MudText>
+            </div>
+            <MudSpacer />
+            <MudChip T="string" Color="@(_person.IsActive ? Color.Success : Color.Default)"
+                     Variant="Variant.Filled" Label="true">
+                @(_person.IsActive ? "Active" : "Inactive")
+            </MudChip>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="EditPersonAsync">Edit</MudButton>
+            @if (_person.IsActive)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.PersonOff"
+                           OnClick="SeparatePersonAsync">Separate</MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.PersonAdd"
+                           OnClick="ReHirePersonAsync">Re-hire</MudButton>
+            }
+        </div>
+    </MudPaper>
+
+    <MudTabs Elevation="2" Rounded="true" PanelClass="pa-4" ApplyEffectsToContainer="true">
+        <MudTabPanel Text="Job Titles" Icon="@Icons.Material.Filled.Work">
+            <div class="d-flex justify-end mb-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="AddJobTitleAsync">Add Job Title</MudButton>
+            </div>
+            <MudTable Items="_jobTitles" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Title</MudTh>
+                    <MudTh>Effective Date</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Title</MudTd>
+                    <MudTd>@context.EffectiveDate.ToShortDateString()</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Teams" Icon="@Icons.Material.Filled.Groups">
+            <div class="d-flex justify-end mb-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="AddTeamAsync">Add Team</MudButton>
+            </div>
+            <MudTable Items="_teamAssignments" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Team</MudTh>
+                    <MudTh>Effective</MudTh>
+                    <MudTh>Removed</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.ProjectTeam?.Name</MudTd>
+                    <MudTd>@context.EffectiveDate.ToShortDateString()</MudTd>
+                    <MudTd>@(context.RemovedDate.HasValue ? context.RemovedDate.Value.ToShortDateString() : "Current")</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Employment History" Icon="@Icons.Material.Filled.History">
+            <MudTable Items="_periods" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Hired</MudTh>
+                    <MudTh>Separated</MudTh>
+                    <MudTh>Reason</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.HireDate.ToShortDateString()</MudTd>
+                    <MudTd>@(context.SeparationDate.HasValue ? context.SeparationDate.Value.ToShortDateString() : "Present")</MudTd>
+                    <MudTd>@FormatReason(context.SeparationReason)</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Meetings" Icon="@Icons.Material.Filled.EventNote">
+            <div class="d-flex justify-end mb-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="NewMeetingAsync">New Meeting</MudButton>
+            </div>
+            <MudTable Items="_meetings" Dense="true" Hover="true" Elevation="0"
+                      T="Meeting" OnRowClick="@(args => Nav.NavigateTo($"/meetings/{args.Item!.MeetingId}"))"
+                      RowClass="cursor-pointer">
+                <HeaderContent>
+                    <MudTh>Date</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.MeetingDate.ToLongDateString()</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@code {
+    [Parameter] public int PersonId { get; set; }
+
+    private bool _loading = true;
+    private Person? _person;
+    private List<PersonJobTitle> _jobTitles = new();
+    private List<PersonProjectAssignment> _teamAssignments = new();
+    private List<PersonEmploymentPeriod> _periods = new();
+    private List<Meeting> _meetings = new();
+
+    private string CurrentTitle =>
+        _jobTitles.OrderByDescending(t => t.EffectiveDate).FirstOrDefault()?.Title ?? "—";
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _person = await db.People.FindAsync(PersonId);
+        if (_person is null) { _loading = false; return; }
+
+        _jobTitles = await db.PersonJobTitles
+            .Where(t => t.PersonId == PersonId)
+            .OrderByDescending(t => t.EffectiveDate)
+            .ToListAsync();
+
+        _teamAssignments = await db.PersonProjectAssignments
+            .Include(a => a.ProjectTeam)
+            .Where(a => a.PersonId == PersonId)
+            .OrderByDescending(a => a.EffectiveDate)
+            .ToListAsync();
+
+        _periods = await db.PersonEmploymentPeriods
+            .Where(p => p.PersonId == PersonId)
+            .OrderByDescending(p => p.HireDate)
+            .ToListAsync();
+
+        _meetings = await db.Meetings
+            .Where(m => m.PersonId == PersonId)
+            .OrderByDescending(m => m.MeetingDate)
+            .ToListAsync();
+
+        _loading = false;
+    }
+
+    private static string FormatReason(SeparationReason? r) => r switch
+    {
+        SeparationReason.EndOfInternship => "End of Internship",
+        SeparationReason.VoluntaryResignation => "Voluntary Resignation",
+        SeparationReason.Termination => "Termination",
+        SeparationReason.Other => "Other",
+        _ => "—"
+    };
+
+    private async Task EditPersonAsync()
+    {
+        var p = new DialogParameters<AddEditPersonDialog> { { x => x.PersonId, PersonId } };
+        var dialog = await DialogService.ShowAsync<AddEditPersonDialog>("Edit Person", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+
+    private async Task AddJobTitleAsync()
+    {
+        var p = new DialogParameters<AddJobTitleDialog> { { x => x.PersonId, PersonId } };
+        var dialog = await DialogService.ShowAsync<AddJobTitleDialog>("Add Job Title", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+
+    private async Task AddTeamAsync()
+    {
+        var p = new DialogParameters<AddTeamAssignmentDialog> { { x => x.PersonId, PersonId } };
+        var dialog = await DialogService.ShowAsync<AddTeamAssignmentDialog>("Add Team Assignment", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+
+    private async Task SeparatePersonAsync()
+    {
+        var p = new DialogParameters<SeparatePersonDialog>
+        {
+            { x => x.PersonId, PersonId },
+            { x => x.PersonName, _person!.DisplayName }
+        };
+        var dialog = await DialogService.ShowAsync<SeparatePersonDialog>("Separate Employee", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+
+    private async Task ReHirePersonAsync()
+    {
+        var p = new DialogParameters<ReHirePersonDialog>
+        {
+            { x => x.PersonId, PersonId },
+            { x => x.PersonName, _person!.DisplayName }
+        };
+        var dialog = await DialogService.ShowAsync<ReHirePersonDialog>("Re-hire Employee", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+
+    private async Task NewMeetingAsync()
+    {
+        Nav.NavigateTo($"/meetings/new?personId={PersonId}&date={DateTime.Today:yyyy-MM-dd}");
+        await Task.CompletedTask;
+    }
+}

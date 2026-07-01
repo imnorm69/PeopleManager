@@ -1,0 +1,57 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Job Title</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
+            <MudTextField @bind-Value="_title" Label="Title *"
+                          Required="true" RequiredError="Title is required."
+                          Variant="Variant.Outlined" />
+            <MudDatePicker @bind-Date="_effectiveDate" Label="Effective Date *"
+                           Required="true" RequiredError="Effective date is required."
+                           Variant="Variant.Outlined" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int PersonId { get; set; }
+
+    private MudForm _form = null!;
+    private string _title = "";
+    private DateTime? _effectiveDate = DateTime.Today;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            db.PersonJobTitles.Add(new PersonJobTitle
+            {
+                PersonId = PersonId,
+                Title = _title.Trim(),
+                EffectiveDate = _effectiveDate ?? DateTime.Today
+            });
+            await db.SaveChangesAsync();
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

@@ -1,0 +1,110 @@
+@page "/glows-grows"
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IDialogService DialogService
+
+<PageTitle>Glows &amp; Grows — People Manager</PageTitle>
+
+<div class="d-flex align-center gap-3 mb-4 flex-wrap">
+    <MudText Typo="Typo.h5">Glows &amp; Grows</MudText>
+    <MudSpacer />
+    <MudSelect T="int?" @bind-Value="_personFilter" Label="Person"
+               Style="min-width:180px;" Clearable="true" Dense="true" Variant="Variant.Outlined">
+        @foreach (var p in _people)
+        {
+            <MudSelectItem T="int?" Value="@((int?)p.PersonId)">@p.DisplayName</MudSelectItem>
+        }
+    </MudSelect>
+    <MudSelect T="GlowGrowType?" @bind-Value="_typeFilter" Label="Type"
+               Style="min-width:130px;" Clearable="true" Dense="true" Variant="Variant.Outlined">
+        <MudSelectItem T="GlowGrowType?" Value="@((GlowGrowType?)GlowGrowType.Glow)">Glow</MudSelectItem>
+        <MudSelectItem T="GlowGrowType?" Value="@((GlowGrowType?)GlowGrowType.Grow)">Grow</MudSelectItem>
+    </MudSelect>
+    <MudCheckBox @bind-Value="_hideCommunicated" Label="Hide Communicated" Dense="true" />
+    <MudButton Variant="Variant.Filled" Color="Color.Success"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="AddGlowGrowAsync">
+        Add Glow/Grow
+    </MudButton>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="@Filtered" Hover="true" Dense="false" Elevation="2"
+              T="GlowGrow" OnRowClick="@(args => OpenDetailAsync(args.Item!))" RowClass="cursor-pointer">
+        <HeaderContent>
+            <MudTh>Person</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh>Note</MudTh>
+            <MudTh>Source</MudTh>
+            <MudTh>Added</MudTh>
+            <MudTh>Communicated</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Person">@context.Person.DisplayName</MudTd>
+            <MudTd DataLabel="Type">
+                <MudChip T="string"
+                         Color="@(context.Type == GlowGrowType.Glow ? Color.Success : Color.Error)"
+                         Size="Size.Small" Variant="Variant.Filled" Label="true">
+                    @context.Type
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Note" Style="white-space:normal;max-width:450px;">@context.Note</MudTd>
+            <MudTd DataLabel="Source">@(context.Source ?? "—")</MudTd>
+            <MudTd DataLabel="Added">@context.CreatedDate.ToShortDateString()</MudTd>
+            <MudTd DataLabel="Communicated">
+                @(context.CommunicatedDate.HasValue ? context.CommunicatedDate.Value.ToShortDateString() : "—")
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _hideCommunicated = true;
+    private int? _personFilter;
+    private GlowGrowType? _typeFilter;
+    private List<GlowGrow> _items = new();
+    private List<Person> _people = new();
+
+    private IEnumerable<GlowGrow> Filtered => _items
+        .Where(g => !_personFilter.HasValue || g.PersonId == _personFilter)
+        .Where(g => !_typeFilter.HasValue || g.Type == _typeFilter)
+        .Where(g => !_hideCommunicated || g.CommunicatedDate == null);
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _items = await db.GlowsGrows
+            .Include(g => g.Person)
+            .OrderByDescending(g => g.CreatedDate)
+            .ToListAsync();
+        _people = _items.Select(g => g.Person)
+            .DistinctBy(p => p.PersonId)
+            .OrderBy(p => p.DisplayName)
+            .ToList();
+        _loading = false;
+    }
+
+    private async Task AddGlowGrowAsync()
+    {
+        var dialog = await DialogService.ShowAsync<AddGlowGrowDialog>("Add Glow / Grow");
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+
+    private async Task OpenDetailAsync(GlowGrow item)
+    {
+        var p = new DialogParameters<GlowGrowDetailDialog> { { x => x.GlowGrowId, item.GlowGrowId } };
+        var dialog = await DialogService.ShowAsync<GlowGrowDetailDialog>(
+            item.Type == GlowGrowType.Glow ? "Glow Detail" : "Grow Detail", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+}

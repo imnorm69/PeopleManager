@@ -1,0 +1,112 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            @(PersonId == 0 ? "Add Person" : "Edit Person")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_loading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else
+        {
+            <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
+                <MudTextField @bind-Value="_firstName" Label="First Name *"
+                              Required="true" RequiredError="First name is required."
+                              Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="_lastName" Label="Last Name *"
+                              Required="true" RequiredError="Last name is required."
+                              Variant="Variant.Outlined" />
+                <MudDatePicker @bind-Date="_startDate" Label="Start Date *"
+                               Required="true" RequiredError="Start date is required."
+                               Variant="Variant.Outlined" />
+            </MudForm>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync" Disabled="_loading">
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int PersonId { get; set; }
+
+    private MudForm _form = null!;
+    private bool _loading = true;
+    private string _firstName = "";
+    private string _lastName = "";
+    private DateTime? _startDate = DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (PersonId > 0)
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var p = await db.People.FindAsync(PersonId);
+            if (p is not null)
+            {
+                _firstName = p.FirstName;
+                _lastName = p.LastName;
+                _startDate = p.StartDate;
+            }
+        }
+        _loading = false;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            if (PersonId == 0)
+            {
+                var person = new Person
+                {
+                    FirstName = _firstName.Trim(),
+                    LastName = _lastName.Trim(),
+                    StartDate = _startDate ?? DateTime.Today,
+                    IsActive = true
+                };
+                db.People.Add(person);
+                await db.SaveChangesAsync();
+
+                db.PersonEmploymentPeriods.Add(new PersonEmploymentPeriod
+                {
+                    PersonId = person.PersonId,
+                    HireDate = person.StartDate
+                });
+                await db.SaveChangesAsync();
+            }
+            else
+            {
+                var p = await db.People.FindAsync(PersonId);
+                if (p is not null)
+                {
+                    p.FirstName = _firstName.Trim();
+                    p.LastName = _lastName.Trim();
+                    p.StartDate = _startDate ?? DateTime.Today;
+                    await db.SaveChangesAsync();
+                }
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}
