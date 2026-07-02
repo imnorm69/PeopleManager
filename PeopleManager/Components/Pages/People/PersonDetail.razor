@@ -134,7 +134,7 @@ else
                            Style="min-width:110px;" Dense="true" Variant="Variant.Outlined">
                     @foreach (var q in _availableQuarters)
                     {
-                        <MudSelectItem T="int" Value="q">Q@q</MudSelectItem>
+                        <MudSelectItem T="int" Value="q">Q@(q)</MudSelectItem>
                     }
                 </MudSelect>
                 <MudButton Variant="Variant.Filled" Color="Color.Success"
@@ -148,14 +148,14 @@ else
                     <MudText Style="font-weight:600;">
                         @(_quarterShadowerPoints >= 2m ? "Shadowing requirement met" : "Shadowing requirement not met")
                         — @_quarterShadowerPoints pt@(_quarterShadowerPoints == 1 ? "" : "s") of 2 required
-                        (Q@_selectedQuarter @_selectedYear)
+                        (Q@(_selectedQuarter) @_selectedYear)
                     </MudText>
                 </MudPaper>
             }
 
             @if (_quarterSessions.Count == 0)
             {
-                <MudText Color="Color.Secondary">No shadow sessions logged for Q@_selectedQuarter @_selectedYear.</MudText>
+                <MudText Color="Color.Secondary">No shadow sessions logged for Q@(_selectedQuarter) @_selectedYear.</MudText>
             }
             else
             {
