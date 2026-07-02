@@ -118,6 +118,33 @@ else
             </MudTable>
         </MudTabPanel>
 
+        <MudTabPanel Text="Checklist History" Icon="@Icons.Material.Filled.Checklist">
+            @if (_checklistHistory.Count == 0)
+            {
+                <MudText Color="Color.Secondary">No checklist answers recorded.</MudText>
+            }
+            else
+            {
+                <MudTable Items="_checklistHistory" Dense="true" Hover="true" Elevation="0"
+                          T="ChecklistItemEvaluation"
+                          OnRowClick="@(args => { if (args.Item!.MeetingId.HasValue) Nav.NavigateTo($"/meetings/{args.Item.MeetingId}"); })"
+                          RowClass="cursor-pointer">
+                    <HeaderContent>
+                        <MudTh>Recorded</MudTh>
+                        <MudTh>Item</MudTh>
+                        <MudTh>Answer</MudTh>
+                        <MudTh>Comment</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.RecordedAt.ToString("g")</MudTd>
+                        <MudTd>@context.Item.Description</MudTd>
+                        <MudTd>@(context.Value ?? "—")</MudTd>
+                        <MudTd Style="white-space:normal">@(context.Notes ?? "—")</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudTabPanel>
+
         <MudTabPanel Text="Shadowing" Icon="@Icons.Material.Filled.Visibility">
             <div class="d-flex align-center flex-wrap gap-4 mb-4">
                 <MudCheckBox T="bool" Value="_person.ExcludedFromShadowing" ValueChanged="OnExcludedChangedAsync"
@@ -196,6 +223,7 @@ else
     private List<PersonProjectAssignment> _teamAssignments = new();
     private List<PersonEmploymentPeriod> _periods = new();
     private List<Meeting> _meetings = new();
+    private List<ChecklistItemEvaluation> _checklistHistory = new();
     private List<ShadowSession> _shadowSessions = new();
     private List<int> _availableYears = new();
     private List<int> _availableQuarters = new();
@@ -239,6 +267,12 @@ else
         _meetings = await db.Meetings
             .Where(m => m.PersonId == PersonId)
             .OrderByDescending(m => m.MeetingDate)
+            .ToListAsync();
+
+        _checklistHistory = await db.ChecklistItemEvaluations
+            .Include(e => e.Item)
+            .Where(e => e.PersonId == PersonId)
+            .OrderByDescending(e => e.RecordedAt)
             .ToListAsync();
 
         _shadowSessions = await db.ShadowSessions

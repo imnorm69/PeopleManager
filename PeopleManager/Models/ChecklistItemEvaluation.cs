@@ -33,6 +33,9 @@ public class ChecklistItemEvaluation
     /// <summary>Gets or sets the date the evaluation was recorded (matches meeting date when captured in a meeting).</summary>
     public DateTime EvaluatedDate { get; set; }
 
+    /// <summary>Gets or sets the actual date and time this answer was saved, independent of <see cref="EvaluatedDate"/>.</summary>
+    public DateTime RecordedAt { get; set; }
+
     /// <summary>Gets or sets the answer value, serialised as a string regardless of the item's value type.</summary>
     public string? Value { get; set; }
 

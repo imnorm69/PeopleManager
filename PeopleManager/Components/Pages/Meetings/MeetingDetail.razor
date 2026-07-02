@@ -73,9 +73,10 @@ else
                             <MudSimpleTable Dense="true" Hover="true" Style="overflow:hidden;">
                                 <thead>
                                     <tr>
-                                        <th style="width:55%">Item</th>
-                                        <th style="width:15%;text-align:center;">Frequency</th>
-                                        <th style="width:30%">Answer</th>
+                                        <th style="width:35%">Item</th>
+                                        <th style="width:12%;text-align:center;">Frequency</th>
+                                        <th style="width:20%">Answer</th>
+                                        <th style="width:33%">Comment</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -112,6 +113,11 @@ else
                                                                   Adornment="@(entry.ValueType == ChecklistValueType.Percentage ? Adornment.End : Adornment.None)"
                                                                   AdornmentText="%" />
                                                 }
+                                            </td>
+                                            <td>
+                                                <MudTextField @bind-Value="entry.Comment"
+                                                              Placeholder="Optional comment…"
+                                                              Variant="Variant.Outlined" Margin="Margin.Dense" />
                                             </td>
                                         </tr>
                                     }
@@ -376,7 +382,7 @@ else
                 a.Item.Description,
                 a.Item.ValueType,
                 FormatFrequency(a.Frequency))
-            { Answer = eval?.Value };
+            { Answer = eval?.Value, Comment = eval?.Notes };
         }).ToList();
     }
 
@@ -439,6 +445,7 @@ else
                 }
             }
 
+            var now = DateTime.Now;
             foreach (var entry in _checklist.Where(e => e.Answer is not null))
             {
                 var eval = await db.ChecklistItemEvaluations
@@ -451,17 +458,20 @@ else
                         ItemId = entry.ItemId,
                         MeetingId = _meetingId,
                         EvaluatedDate = _meetingDate,
-                        Value = entry.Answer
+                        RecordedAt = now,
+                        Value = entry.Answer,
+                        Notes = string.IsNullOrWhiteSpace(entry.Comment) ? null : entry.Comment.Trim()
                     });
                 }
                 else
                 {
                     eval.Value = entry.Answer;
                     eval.EvaluatedDate = _meetingDate;
+                    eval.RecordedAt = now;
+                    eval.Notes = string.IsNullOrWhiteSpace(entry.Comment) ? null : entry.Comment.Trim();
                 }
             }
 
-            var now = DateTime.Now;
             foreach (var sel in _glows.Concat(_grows).Where(s => s.Selected))
             {
                 var gg = await db.GlowsGrows.FindAsync(sel.Item.GlowGrowId);
@@ -565,5 +575,6 @@ else
         public ChecklistValueType ValueType { get; } = valueType;
         public string FrequencyLabel { get; } = frequencyLabel;
         public string? Answer { get; set; }
+        public string? Comment { get; set; }
     }
 }
