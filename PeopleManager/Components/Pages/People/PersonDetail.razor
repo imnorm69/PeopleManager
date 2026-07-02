@@ -48,8 +48,22 @@ else
     </MudPaper>
 
     <MudTabs Elevation="2" Rounded="true" PanelClass="pa-4" ApplyEffectsToContainer="true">
-        <MudTabPanel Text="Job Titles" Icon="@Icons.Material.Filled.Work">
-            <div class="d-flex justify-end mb-3">
+        <MudTabPanel Text="Employment History" Icon="@Icons.Material.Filled.History">
+            <MudTable Items="_periods" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Hired</MudTh>
+                    <MudTh>Separated</MudTh>
+                    <MudTh>Reason</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.HireDate.ToShortDateString()</MudTd>
+                    <MudTd>@(context.SeparationDate.HasValue ? context.SeparationDate.Value.ToShortDateString() : "Present")</MudTd>
+                    <MudTd>@FormatReason(context.SeparationReason)</MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <div class="d-flex justify-space-between align-center mt-6 mb-3">
+                <MudText Typo="Typo.subtitle1">Job Titles</MudText>
                 <MudButton Variant="Variant.Filled" Color="Color.Success"
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="AddJobTitleAsync">Add Job Title</MudButton>
@@ -60,8 +74,8 @@ else
                     <MudTh>Effective Date</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd>@context.Title</MudTd>
-                    <MudTd>@context.EffectiveDate.ToShortDateString()</MudTd>
+                    <MudTd Style="@(context == _jobTitles.FirstOrDefault() ? "font-weight:700;" : null)">@context.Title</MudTd>
+                    <MudTd Style="@(context == _jobTitles.FirstOrDefault() ? "font-weight:700;" : null)">@context.EffectiveDate.ToShortDateString()</MudTd>
                 </RowTemplate>
             </MudTable>
         </MudTabPanel>
@@ -82,21 +96,6 @@ else
                     <MudTd>@context.ProjectTeam?.Name</MudTd>
                     <MudTd>@context.EffectiveDate.ToShortDateString()</MudTd>
                     <MudTd>@(context.RemovedDate.HasValue ? context.RemovedDate.Value.ToShortDateString() : "Current")</MudTd>
-                </RowTemplate>
-            </MudTable>
-        </MudTabPanel>
-
-        <MudTabPanel Text="Employment History" Icon="@Icons.Material.Filled.History">
-            <MudTable Items="_periods" Dense="true" Hover="true" Elevation="0">
-                <HeaderContent>
-                    <MudTh>Hired</MudTh>
-                    <MudTh>Separated</MudTh>
-                    <MudTh>Reason</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.HireDate.ToShortDateString()</MudTd>
-                    <MudTd>@(context.SeparationDate.HasValue ? context.SeparationDate.Value.ToShortDateString() : "Present")</MudTd>
-                    <MudTd>@FormatReason(context.SeparationReason)</MudTd>
                 </RowTemplate>
             </MudTable>
         </MudTabPanel>
