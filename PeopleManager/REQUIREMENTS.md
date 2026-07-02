@@ -1,89 +1,80 @@
-﻿# PeopleManager — Requirements
+# PeopleManager — Requirements
 
 ## Overview
-A Windows desktop application (WinForms / .NET 9) for managers to track their direct reports, 1:1 meetings, action items, feedback, and checklist-based reviews. Data is stored locally in a SQLite file (`%LOCALAPPDATA%\PeopleManager\people.db`).
+A Blazor Server web app (.NET 9 + MudBlazor 8.x) for managers to track their direct reports, 1:1 meetings, action items, feedback, and checklist-based reviews. Accessed via browser (Kestrel-hosted). Data is stored in a SQLite file — defaults to `%LOCALAPPDATA%\PeopleManager\people.db` locally, overridable via the `DatabasePath` config key (used in production, deployed via systemd/LXC).
 
 ---
 
 ## Implemented
 
 ### People Management
-- View a list of all active and inactive direct reports
-- Add a new person with first name, last name, start date, and initial job title
+- View a list of all active and inactive direct reports, with a "Show Inactive" toggle, sortable by name
+- Add a new person (first name, last name, start date) — an initial employment period is created automatically
 - Edit a person's basic info (name, start date)
 - View a person's detail page, including:
-  - Job titles history (title, effective date, current flag)
-  - Team / project assignments (current and history)
-  - Employment history (hire date, separation date, reason, notes)
-- Separate a person (record separation date, reason, and optional notes)
-- Re-hire a previously separated person (new start date and job title)
+  - Employment History tab — hire/separation/reason table, plus job title history below it (newest first, current title bolded)
+  - Teams tab — current and historical team/project assignments
+  - Meetings tab — list of 1:1 meetings for the person
+- Separate a person (separation date, reason, notes — notes required when reason is "Other")
+- Re-hire a previously separated person (new start date and new job title, both required)
 - People are marked active/inactive rather than deleted
 
 ### 1:1 Meetings
-- List all 1:1 meetings for a person, sorted by date
+- List all meetings, filterable by person, sortable by person/date
 - Create a new meeting (select person, select date)
 - Open an existing meeting to view or edit
 - Meeting form includes:
   - Categorised notes tabs: Project Notes, Career Updates, Training Updates, General Notes
-  - Checklist tab — shows assigned items for the person; answers recorded per meeting
-  - Action items panel — add, complete, delete; filter open/all; @-mention tagging in descriptions
-  - Mentions panel — shows open action items from other meetings that tag this person
-  - Glows & Grows panel — check off glows and grows linked to this person
+  - Checklist tab — shows assigned checklist items and frequency for the person; answers recorded per meeting
+  - Action Items tab — add, complete, delete; toggle to show/hide completed; overdue items shown in red
+  - Mentions tab — other people's open action items whose description text contains this person's first name (plain text match)
+  - Glows & Grows panel — shows this person's uncommunicated glows/grows; check items off to mark as communicated when the meeting is saved; click an item to open its detail
 
 ### Action Items
-- Create action items within a meeting with a description, assignee (manager or person), and due date
-- Descriptions support @-mention autocomplete to tag other people
-- Mark an action item complete (with optional completion notes)
+- Create action items within a meeting: description, assignee (Me or the person), due date
+- Mark an action item complete (with optional completion notes and completed date)
 - Delete an action item
-- Action items have overdue highlighting when past their due date
+- Overdue items (incomplete, past due date) are highlighted in red on the Dashboard and Meeting form
 
 ### Glows & Grows
-- View all glow/grow feedback across all people, with filters
-- Add a new glow or grow (person, type, source, note, optional communicated date)
-- Edit an existing glow/grow
-- Mark a glow/grow as communicated (record the date)
+- View all glow/grow feedback across all people, with filters (person, type, hide communicated)
+- Add a new glow or grow (person, type, note, optional source, date)
+- Edit an existing glow/grow (note, source, date)
+- Delete a glow/grow
+- Mark glows/grows as communicated (via the Meeting form's Glows & Grows panel)
 
 ### Checklist Items
-- Manage a library of checklist items (description, answer value type: text / yes-no / rating)
-- Assign items to specific people with a review frequency (daily / weekly / monthly / quarterly / annually)
+- Manage a library of checklist items (description, answer value type: yes/no, integer, percentage, text, or date; sort order)
+- Assign items to specific people with a review frequency (weekly / bi-weekly / monthly / quarterly / semi-annual / annual)
 - Answers are recorded per person per meeting
 
 ### Dashboard
-- Shows all open action items across all direct reports
-- Filter by assignee: All Open, Assigned to Me, Assigned to Person
-- Mark complete or delete from the dashboard
-- Refresh on demand
+- Shows all open (incomplete) action items across all direct reports, sorted by assignee, then due date, then person
+- Overdue items highlighted in red/bold
 
 ---
 
-## Planned / In Progress
+## Remaining
 
-### Dashboard — Overdue and Due This Week sections
-- Add an **Overdue** section to the dashboard showing all incomplete action items past their due date, grouped or sorted by person
-- Add a **Due This Week** section showing incomplete action items due within the next 7 days
-- Both sections should support Mark Complete and Delete inline
+### Dashboard
+- Filter by assignee: All Open, Assigned to Me, Assigned to Person
+- Mark complete or delete an action item directly from the dashboard
+- Manual refresh button
+- Add an **Overdue** section (grouped/sorted by person), separate from the flat list
+- Add a **Due This Week** section (incomplete items due within the next 7 days)
 
-### Person Detail — Overdue and Due This Week
-- Add an **Action Items** view to the Person Detail form showing:
-  - All overdue (incomplete, past due date) action items for that person
-  - All action items due within the next 7 days for that person
+### Person Detail
+- Add an Action Items view showing overdue and due-this-week items for that person
 
-### Meeting Form — Overdue and Due This Week
-- Within the Meeting form's action items panel, visually distinguish or surface:
-  - Items that are overdue (past due date, not complete)
-  - Items due within the next 7 days
+### Meeting Form
+- Surface items due within the next 7 days in the Action Items panel (overdue is already highlighted; due-this-week is not yet distinguished)
 
-### Generate Report — Individual
-- Generate a formatted report for a single person covering a specified date range, including:
-  - Meeting summaries (notes per category)
-  - Action items (open and completed)
-  - Glows and grows
-  - Checklist responses
-- Report format TBD (PDF / RTF / HTML)
+### Action Items
+- True @-mention autocomplete when typing a description (currently the Mentions tab does a plain substring match against the person's first name — no autocomplete UI)
 
-### Generate Report — Weekly
-- Generate a weekly summary report across all direct reports, including:
-  - Meetings held that week
-  - Action items created, completed, and overdue as of end of week
-  - Any new glows/grows recorded
-- Report format TBD (PDF / RTF / HTML)
+### People Management
+- Option to set an initial job title when adding a new person (currently it must be added afterward via the Employment History tab)
+
+### Reporting
+- Generate a report for a single person over a date range — meeting summaries, action items, glows/grows, checklist responses (format TBD: PDF / RTF / HTML)
+- Generate a weekly summary report across all direct reports — meetings held, action items created/completed/overdue, new glows/grows (format TBD: PDF / RTF / HTML)
