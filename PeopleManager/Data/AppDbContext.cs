@@ -33,6 +33,8 @@ public class AppDbContext : DbContext
     public DbSet<PersonItemAssignment>     PersonItemAssignments     { get; set; }
     /// <summary>Gets or sets the ChecklistItemEvaluations table.</summary>
     public DbSet<ChecklistItemEvaluation>  ChecklistItemEvaluations  { get; set; }
+    /// <summary>Gets or sets the ShadowSessions table.</summary>
+    public DbSet<ShadowSession>            ShadowSessions            { get; set; }
 
     /// <summary>Initialises a new context instance with the given options.</summary>
     /// <param name="options">EF Core options including the connection string.</param>
@@ -127,6 +129,19 @@ public class AppDbContext : DbContext
             .HasForeignKey(g => g.PersonId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // ── ShadowSession — two Person FKs, no cascade to avoid cycles ──────────
+        modelBuilder.Entity<ShadowSession>()
+            .HasOne(s => s.Shadower)
+            .WithMany(p => p.ShadowSessionsAsShadower)
+            .HasForeignKey(s => s.ShadowerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ShadowSession>()
+            .HasOne(s => s.ObservedPerson)
+            .WithMany(p => p.ShadowSessionsAsObserved)
+            .HasForeignKey(s => s.ObservedPersonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // ── Indexes ──────────────────────────────────────────────────────────────
         modelBuilder.Entity<PersonJobTitle>()
             .HasIndex(j => new { j.PersonId, j.EffectiveDate });
@@ -141,5 +156,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<PersonItemAssignment>()
             .HasIndex(a => new { a.PersonId, a.ItemId })
             .IsUnique();   // a person can only be assigned a given item once
+        modelBuilder.Entity<ShadowSession>()
+            .HasIndex(s => new { s.ShadowerId, s.Date });   // quota lookups per shadower per quarter
     }
 }

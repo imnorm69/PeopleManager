@@ -117,6 +117,46 @@ else
                 </RowTemplate>
             </MudTable>
         </MudTabPanel>
+
+        <MudTabPanel Text="Shadowing" Icon="@Icons.Material.Filled.Visibility">
+            <div class="d-flex justify-end mb-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="AddShadowSessionAsync">Add Shadow Session</MudButton>
+            </div>
+            @if (_shadowSessions.Count == 0)
+            {
+                <MudText Color="Color.Secondary">No shadow sessions recorded.</MudText>
+            }
+            else
+            {
+                <MudTimeline TimelinePosition="TimelinePosition.Start" TimelineOrientation="TimelineOrientation.Vertical">
+                    @foreach (var s in _shadowSessions)
+                    {
+                        var isShadower = s.ShadowerId == PersonId;
+                        <MudTimelineItem Color="@(isShadower ? Color.Primary : Color.Secondary)"
+                                         Icon="@(isShadower ? Icons.Material.Filled.Visibility : Icons.Material.Filled.RemoveRedEye)">
+                            <ItemContent>
+                                <MudText Typo="Typo.subtitle2">
+                                    @(isShadower
+                                        ? $"Shadowed {s.ObservedPerson.DisplayName}"
+                                        : $"Shadowed by {s.Shadower.DisplayName}")
+                                </MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    @s.Date.ToShortDateString() — @FormatEventType(s.EventType) — @s.TeamObserved
+                                </MudText>
+                                @if (isShadower)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">
+                                        @s.Points pt@(s.Points == 1 ? "" : "s")
+                                    </MudChip>
+                                }
+                            </ItemContent>
+                        </MudTimelineItem>
+                    }
+                </MudTimeline>
+            }
+        </MudTabPanel>
     </MudTabs>
 }
 
@@ -129,6 +169,7 @@ else
     private List<PersonProjectAssignment> _teamAssignments = new();
     private List<PersonEmploymentPeriod> _periods = new();
     private List<Meeting> _meetings = new();
+    private List<ShadowSession> _shadowSessions = new();
 
     private string CurrentTitle =>
         _jobTitles.OrderByDescending(t => t.EffectiveDate).FirstOrDefault()?.Title ?? "—";
@@ -163,6 +204,13 @@ else
             .OrderByDescending(m => m.MeetingDate)
             .ToListAsync();
 
+        _shadowSessions = await db.ShadowSessions
+            .Include(s => s.Shadower)
+            .Include(s => s.ObservedPerson)
+            .Where(s => s.ShadowerId == PersonId || s.ObservedPersonId == PersonId)
+            .OrderByDescending(s => s.Date)
+            .ToListAsync();
+
         _loading = false;
     }
 
@@ -173,6 +221,12 @@ else
         SeparationReason.Termination => "Termination",
         SeparationReason.Other => "Other",
         _ => "—"
+    };
+
+    private static string FormatEventType(ShadowEventType t) => t switch
+    {
+        ShadowEventType.DailyStandup => "Daily Standup",
+        _ => t.ToString()
     };
 
     private async Task EditPersonAsync()
@@ -227,5 +281,13 @@ else
     {
         Nav.NavigateTo($"/meetings/new?personId={PersonId}&date={DateTime.Today:yyyy-MM-dd}");
         await Task.CompletedTask;
+    }
+
+    private async Task AddShadowSessionAsync()
+    {
+        var p = new DialogParameters<AddShadowSessionDialog> { { x => x.PersonId, PersonId } };
+        var dialog = await DialogService.ShowAsync<AddShadowSessionDialog>("Add Shadow Session", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
     }
 }

@@ -24,6 +24,8 @@
                 <MudDatePicker @bind-Date="_startDate" Label="Start Date *"
                                Required="true" RequiredError="Start date is required."
                                Variant="Variant.Outlined" />
+                <MudCheckBox @bind-Value="_excludedFromShadowing" Label="Excluded from Shadowing"
+                             Color="Color.Primary" Dense="true" />
             </MudForm>
         }
     </DialogContent>
@@ -45,6 +47,7 @@
     private string _firstName = "";
     private string _lastName = "";
     private DateTime? _startDate = DateTime.Today;
+    private bool _excludedFromShadowing;
 
     protected override async Task OnInitializedAsync()
     {
@@ -57,6 +60,7 @@
                 _firstName = p.FirstName;
                 _lastName = p.LastName;
                 _startDate = p.StartDate;
+                _excludedFromShadowing = p.ExcludedFromShadowing;
             }
         }
         _loading = false;
@@ -79,7 +83,8 @@
                     FirstName = _firstName.Trim(),
                     LastName = _lastName.Trim(),
                     StartDate = _startDate ?? DateTime.Today,
-                    IsActive = true
+                    IsActive = true,
+                    ExcludedFromShadowing = _excludedFromShadowing
                 };
                 db.People.Add(person);
                 await db.SaveChangesAsync();
@@ -99,6 +104,7 @@
                     p.FirstName = _firstName.Trim();
                     p.LastName = _lastName.Trim();
                     p.StartDate = _startDate ?? DateTime.Today;
+                    p.ExcludedFromShadowing = _excludedFromShadowing;
                     await db.SaveChangesAsync();
                 }
             }

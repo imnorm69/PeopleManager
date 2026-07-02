@@ -1,0 +1,124 @@
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Shadow Session</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
+            <MudDatePicker @bind-Date="_date" Label="Date *"
+                           Required="true" RequiredError="Date is required."
+                           Variant="Variant.Outlined" />
+            <MudSelect T="int" @bind-Value="_shadowerId" Label="Shadower (who observed) *"
+                       Required="true" RequiredError="Shadower is required."
+                       Variant="Variant.Outlined">
+                @foreach (var p in _people)
+                {
+                    <MudSelectItem T="int" Value="p.PersonId">@p.DisplayName</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="int" @bind-Value="_observedPersonId" Label="Observed (who was shadowed) *"
+                       Required="true" RequiredError="Observed person is required."
+                       Variant="Variant.Outlined">
+                @foreach (var p in _people)
+                {
+                    <MudSelectItem T="int" Value="p.PersonId">@p.DisplayName</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField @bind-Value="_teamObserved" Label="Team Observed *"
+                          Required="true" RequiredError="Team observed is required."
+                          Variant="Variant.Outlined" />
+            <MudSelect T="ShadowEventType" @bind-Value="_eventType" Label="Event Type"
+                       Variant="Variant.Outlined">
+                <MudSelectItem T="ShadowEventType" Value="ShadowEventType.Planning">Planning</MudSelectItem>
+                <MudSelectItem T="ShadowEventType" Value="ShadowEventType.Refinement">Refinement</MudSelectItem>
+                <MudSelectItem T="ShadowEventType" Value="ShadowEventType.Review">Review</MudSelectItem>
+                <MudSelectItem T="ShadowEventType" Value="ShadowEventType.Retro">Retro</MudSelectItem>
+                <MudSelectItem T="ShadowEventType" Value="ShadowEventType.DailyStandup">Daily Standup</MudSelectItem>
+                <MudSelectItem T="ShadowEventType" Value="ShadowEventType.Other">Other</MudSelectItem>
+            </MudSelect>
+            @if (_eventType == ShadowEventType.Other)
+            {
+                <MudSelect T="decimal" @bind-Value="_points" Label="Points *" Variant="Variant.Outlined">
+                    <MudSelectItem T="decimal" Value="0.5m">0.5</MudSelectItem>
+                    <MudSelectItem T="decimal" Value="1m">1</MudSelectItem>
+                </MudSelect>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Points: @DefaultPoints(_eventType)
+                </MudText>
+            }
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="SubmitAsync">Add</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int PersonId { get; set; }
+
+    private MudForm _form = null!;
+    private DateTime? _date = DateTime.Today;
+    private int _shadowerId;
+    private int _observedPersonId;
+    private string _teamObserved = "";
+    private ShadowEventType _eventType = ShadowEventType.Planning;
+    private decimal _points = 1m;
+    private List<Person> _people = new();
+
+    private static decimal DefaultPoints(ShadowEventType t) =>
+        t == ShadowEventType.DailyStandup ? 0.5m : 1m;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _people = await db.People
+            .Where(p => p.IsActive)
+            .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
+            .ToListAsync();
+        _shadowerId = PersonId > 0 && _people.Any(p => p.PersonId == PersonId)
+            ? PersonId
+            : (_people.FirstOrDefault()?.PersonId ?? 0);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        if (_shadowerId == _observedPersonId)
+        {
+            Snackbar.Add("Shadower and observed person must be different.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            db.ShadowSessions.Add(new ShadowSession
+            {
+                Date = _date ?? DateTime.Today,
+                ShadowerId = _shadowerId,
+                ObservedPersonId = _observedPersonId,
+                TeamObserved = _teamObserved.Trim(),
+                EventType = _eventType,
+                Points = _eventType == ShadowEventType.Other ? _points : DefaultPoints(_eventType)
+            });
+            await db.SaveChangesAsync();
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

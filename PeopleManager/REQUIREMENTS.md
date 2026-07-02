@@ -52,6 +52,13 @@ A Blazor Server web app (.NET 9 + MudBlazor 8.x) for managers to track their dir
 - Shows all open (incomplete) action items across all direct reports, sorted by assignee, then due date, then person
 - Overdue items highlighted in red/bold
 
+### Shadowing
+- Log a shadow session: date, shadower (who observed), observed person (who was shadowed), team observed (free text), event type, and points
+- Event types: Planning, Refinement, Review, Retro, Daily Standup, Other — each carries a point value (Daily Standup = 0.5, all others = 1; when "Other" is chosen, the user picks 0.5 or 1 directly, with no other details required)
+- Only the shadower accumulates quota points; the observed person's own shadowing requirement is unaffected by being observed
+- A person can be marked "Excluded from Shadowing" (checkbox on their record) to exempt them from the 2-points/quarter requirement
+- Shadowing tab on the Person Detail page shows a timeline of sessions involving that person, both as shadower and as the one observed
+
 ---
 
 ## Remaining
@@ -78,3 +85,7 @@ A Blazor Server web app (.NET 9 + MudBlazor 8.x) for managers to track their dir
 ### Reporting
 - Generate a report for a single person over a date range — meeting summaries, action items, glows/grows, checklist responses (format TBD: PDF / RTF / HTML)
 - Generate a weekly summary report across all direct reports — meetings held, action items created/completed/overdue, new glows/grows (format TBD: PDF / RTF / HTML)
+
+### Shadowing
+- Quota-status UI (how progress toward the 2-points/quarter requirement is displayed) — design TBD
+- Dashboard flag for people falling behind on their quarterly quota — timing TBD (likely ~2 weeks before quarter end)
