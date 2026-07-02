@@ -27,10 +27,10 @@ public class AppDbContext : DbContext
     public DbSet<MeetingNote>              MeetingNotes              { get; set; }
     /// <summary>Gets or sets the ActionItems table.</summary>
     public DbSet<ActionItem>               ActionItems               { get; set; }
-    /// <summary>Gets or sets the ChecklistQuestions table.</summary>
-    public DbSet<ChecklistQuestion>        ChecklistQuestions        { get; set; }
-    /// <summary>Gets or sets the PersonQuestionAssignments table.</summary>
-    public DbSet<PersonQuestionAssignment> PersonQuestionAssignments { get; set; }
+    /// <summary>Gets or sets the ChecklistItems table.</summary>
+    public DbSet<ChecklistItem>            ChecklistItems            { get; set; }
+    /// <summary>Gets or sets the PersonItemAssignments table.</summary>
+    public DbSet<PersonItemAssignment>     PersonItemAssignments     { get; set; }
     /// <summary>Gets or sets the ChecklistItemEvaluations table.</summary>
     public DbSet<ChecklistItemEvaluation>  ChecklistItemEvaluations  { get; set; }
 
@@ -43,8 +43,8 @@ public class AppDbContext : DbContext
         // ── Explicit PKs (property name doesn't match [TypeName]Id convention) ──
         modelBuilder.Entity<PersonProjectAssignment>().HasKey(a => a.AssignmentId);
         modelBuilder.Entity<PersonEmploymentPeriod>().HasKey(p => p.PeriodId);
-        modelBuilder.Entity<PersonQuestionAssignment>().HasKey(a => a.AssignmentId);
-        modelBuilder.Entity<ChecklistQuestion>().HasKey(q => q.QuestionId);
+        modelBuilder.Entity<PersonItemAssignment>().HasKey(a => a.AssignmentId);
+        modelBuilder.Entity<ChecklistItem>().HasKey(i => i.ItemId);
         modelBuilder.Entity<ChecklistItemEvaluation>().HasKey(e => e.EvaluationId);
 
 
@@ -89,9 +89,9 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ChecklistItemEvaluation>()
-            .HasOne(e => e.Question)
-            .WithMany(q => q.Evaluations)
-            .HasForeignKey(e => e.QuestionId)
+            .HasOne(e => e.Item)
+            .WithMany(i => i.Evaluations)
+            .HasForeignKey(e => e.ItemId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ChecklistItemEvaluation>()
@@ -100,17 +100,17 @@ public class AppDbContext : DbContext
             .HasForeignKey(e => e.MeetingId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // ── PersonQuestionAssignment ─────────────────────────────────────────────
-        modelBuilder.Entity<PersonQuestionAssignment>()
+        // ── PersonItemAssignment ─────────────────────────────────────────────────
+        modelBuilder.Entity<PersonItemAssignment>()
             .HasOne(a => a.Person)
-            .WithMany(p => p.QuestionAssignments)
+            .WithMany(p => p.ItemAssignments)
             .HasForeignKey(a => a.PersonId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<PersonQuestionAssignment>()
-            .HasOne(a => a.Question)
-            .WithMany(q => q.Assignments)
-            .HasForeignKey(a => a.QuestionId)
+        modelBuilder.Entity<PersonItemAssignment>()
+            .HasOne(a => a.Item)
+            .WithMany(i => i.Assignments)
+            .HasForeignKey(a => a.ItemId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // ── PersonProjectAssignment → Person ──────────────────────────────────────
@@ -137,9 +137,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ActionItem>()
             .HasIndex(a => new { a.PersonId, a.IsComplete });
         modelBuilder.Entity<ChecklistItemEvaluation>()
-            .HasIndex(e => new { e.PersonId, e.QuestionId, e.EvaluatedDate });
-        modelBuilder.Entity<PersonQuestionAssignment>()
-            .HasIndex(a => new { a.PersonId, a.QuestionId })
-            .IsUnique();   // a person can only be assigned a given question once
+            .HasIndex(e => new { e.PersonId, e.ItemId, e.EvaluatedDate });
+        modelBuilder.Entity<PersonItemAssignment>()
+            .HasIndex(a => new { a.PersonId, a.ItemId })
+            .IsUnique();   // a person can only be assigned a given item once
     }
 }

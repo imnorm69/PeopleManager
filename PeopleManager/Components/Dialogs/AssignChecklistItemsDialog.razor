@@ -1,9 +1,9 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject ISnackbar Snackbar
 
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6">Assign Questions to Person</MudText>
+        <MudText Typo="Typo.h6">Assign Items to Person</MudText>
     </TitleContent>
     <DialogContent>
         <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
@@ -16,17 +16,17 @@
                 }
             </MudSelect>
 
-            @if (_questions.Count > 0 && _personId > 0)
+            @if (_items.Count > 0 && _personId > 0)
             {
-                <MudText Typo="Typo.subtitle2" Class="mt-2">Questions</MudText>
-                @foreach (var q in _questions)
+                <MudText Typo="Typo.subtitle2" Class="mt-2">Items</MudText>
+                @foreach (var i in _items)
                 {
                     <div class="d-flex align-center gap-3">
-                        <MudCheckBox @bind-Value="q.Assigned" Dense="true" Color="Color.Primary" />
-                        <MudText Style="flex:1;">@q.Question.Description</MudText>
-                        @if (q.Assigned)
+                        <MudCheckBox @bind-Value="i.Assigned" Dense="true" Color="Color.Primary" />
+                        <MudText Style="flex:1;">@i.Item.Description</MudText>
+                        @if (i.Assigned)
                         {
-                            <MudSelect T="CheckFrequency" @bind-Value="q.Frequency" Dense="true"
+                            <MudSelect T="CheckFrequency" @bind-Value="i.Frequency" Dense="true"
                                        Variant="Variant.Outlined" Style="max-width:150px;" Margin="Margin.Dense">
                                 @foreach (CheckFrequency f in Enum.GetValues<CheckFrequency>())
                                 {
@@ -51,7 +51,7 @@
     private MudForm _form = null!;
     private int _personId;
     private List<Person> _people = new();
-    private List<QuestionRow> _questions = new();
+    private List<ItemRow> _items = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -68,15 +68,15 @@
         if (personId == 0) return;
 
         await using var db = await DbFactory.CreateDbContextAsync();
-        var allQuestions = await db.ChecklistQuestions.OrderBy(q => q.SortOrder).ToListAsync();
-        var existing = await db.PersonQuestionAssignments
+        var allItems = await db.ChecklistItems.OrderBy(i => i.SortOrder).ToListAsync();
+        var existing = await db.PersonItemAssignments
             .Where(a => a.PersonId == personId)
             .ToListAsync();
 
-        _questions = allQuestions.Select(q =>
+        _items = allItems.Select(i =>
         {
-            var assignment = existing.FirstOrDefault(a => a.QuestionId == q.QuestionId);
-            return new QuestionRow(q)
+            var assignment = existing.FirstOrDefault(a => a.ItemId == i.ItemId);
+            return new ItemRow(i)
             {
                 Assigned = assignment is not null,
                 Frequency = assignment?.Frequency ?? CheckFrequency.Monthly
@@ -94,19 +94,19 @@
         try
         {
             await using var db = await DbFactory.CreateDbContextAsync();
-            var existing = await db.PersonQuestionAssignments
+            var existing = await db.PersonItemAssignments
                 .Where(a => a.PersonId == _personId)
                 .ToListAsync();
 
-            foreach (var row in _questions)
+            foreach (var row in _items)
             {
-                var current = existing.FirstOrDefault(a => a.QuestionId == row.Question.QuestionId);
+                var current = existing.FirstOrDefault(a => a.ItemId == row.Item.ItemId);
                 if (row.Assigned && current is null)
                 {
-                    db.PersonQuestionAssignments.Add(new PersonQuestionAssignment
+                    db.PersonItemAssignments.Add(new PersonItemAssignment
                     {
                         PersonId = _personId,
-                        QuestionId = row.Question.QuestionId,
+                        ItemId = row.Item.ItemId,
                         Frequency = row.Frequency,
                         AssignedDate = DateTime.Today
                     });
@@ -117,7 +117,7 @@
                 }
                 else if (!row.Assigned && current is not null)
                 {
-                    db.PersonQuestionAssignments.Remove(current);
+                    db.PersonItemAssignments.Remove(current);
                 }
             }
 
@@ -130,9 +130,9 @@
         }
     }
 
-    private sealed class QuestionRow(ChecklistQuestion question)
+    private sealed class ItemRow(ChecklistItem item)
     {
-        public ChecklistQuestion Question { get; } = question;
+        public ChecklistItem Item { get; } = item;
         public bool Assigned { get; set; }
         public CheckFrequency Frequency { get; set; } = CheckFrequency.Monthly;
     }

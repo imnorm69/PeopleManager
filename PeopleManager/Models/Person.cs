@@ -51,8 +51,8 @@ public class Person
     /// <summary>Gets all action items associated with this person.</summary>
     public ICollection<ActionItem> ActionItems { get; set; } = new List<ActionItem>();
 
-    /// <summary>Gets the checklist questions assigned to this person.</summary>
-    public ICollection<PersonQuestionAssignment> QuestionAssignments { get; set; } = new List<PersonQuestionAssignment>();
+    /// <summary>Gets the checklist items assigned to this person.</summary>
+    public ICollection<PersonItemAssignment> ItemAssignments { get; set; } = new List<PersonItemAssignment>();
 
     /// <summary>Gets all recorded checklist evaluation answers for this person.</summary>
     public ICollection<ChecklistItemEvaluation> ChecklistEvaluations { get; set; } = new List<ChecklistItemEvaluation>();

@@ -1,14 +1,14 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject ISnackbar Snackbar
 
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6">Add Checklist Question</MudText>
+        <MudText Typo="Typo.h6">Add Checklist Item</MudText>
     </TitleContent>
     <DialogContent>
         <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
-            <MudTextField @bind-Value="_description" Label="Question *"
-                          Required="true" RequiredError="Question text is required."
+            <MudTextField @bind-Value="_description" Label="Item *"
+                          Required="true" RequiredError="Item text is required."
                           Lines="2" Variant="Variant.Outlined" />
             <MudSelect T="ChecklistValueType" @bind-Value="_valueType" Label="Answer Type"
                        Variant="Variant.Outlined">
@@ -46,7 +46,7 @@
         try
         {
             await using var db = await DbFactory.CreateDbContextAsync();
-            db.ChecklistQuestions.Add(new ChecklistQuestion
+            db.ChecklistItems.Add(new ChecklistItem
             {
                 Description = _description.Trim(),
                 ValueType = _valueType,

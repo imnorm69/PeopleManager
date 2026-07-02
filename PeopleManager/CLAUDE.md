@@ -26,7 +26,7 @@ net9.0
 - `Components/` — all Blazor components
   - `App.razor`, `Routes.razor`, `_Imports.razor`
   - `Layout/` — `MainLayout.razor`, `NavMenu.razor`
-  - `Pages/` — Dashboard, People/, Meetings/, GlowsGrows/, Questions/
+  - `Pages/` — Dashboard, People/, Meetings/, GlowsGrows/, ChecklistItems/
   - `Dialogs/` — all MudBlazor dialog components
 - `wwwroot/` — `app.css`
 - `appsettings.json` — `DatabasePath` key for SQLite file location
@@ -39,7 +39,7 @@ net9.0
 
 ## Modules Implemented
 - Dashboard: open action items list (assignee + due date sort)
-- People: list, add/edit, PersonDetail with Job Titles / Teams / Employment History / Meetings tabs
+- People: list, add/edit, PersonDetail with Employment History (periods + job titles) / Teams / Meetings tabs
 - 1:1 Meetings: list, MeetingDetail with notes tabs (Project/Career/Training/General/Checklist) + action items + glows/grows communicate panel
 - Glows & Grows: filterable list, add/edit/delete
-- Questions: checklist question list, add question, assign to person with frequency
+- Checklist Items: item list, add item, assign to person with frequency

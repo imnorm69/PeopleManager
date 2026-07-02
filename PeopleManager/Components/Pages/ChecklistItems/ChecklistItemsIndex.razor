@@ -1,20 +1,20 @@
-@page "/questions"
+@page "/checklist-items"
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject IDialogService DialogService
 
-<PageTitle>Questions — People Manager</PageTitle>
+<PageTitle>Checklist Items — People Manager</PageTitle>
 
 <div class="d-flex align-center gap-3 mb-4">
-    <MudText Typo="Typo.h5">Checklist Questions</MudText>
+    <MudText Typo="Typo.h5">Checklist Items</MudText>
     <MudSpacer />
     <MudButton Variant="Variant.Filled" Color="Color.Success"
                StartIcon="@Icons.Material.Filled.Add"
-               OnClick="AddQuestionAsync">
-        Add Question
+               OnClick="AddItemAsync">
+        Add Item
     </MudButton>
     <MudButton Variant="Variant.Outlined" Color="Color.Primary"
                StartIcon="@Icons.Material.Filled.AssignmentInd"
-               OnClick="AssignQuestionsAsync">
+               OnClick="AssignItemsAsync">
         Assign to Person
     </MudButton>
 </div>
@@ -25,7 +25,7 @@
 }
 else
 {
-    <MudTable Items="_questions" Hover="true" Dense="false" Elevation="2">
+    <MudTable Items="_items" Hover="true" Dense="false" Elevation="2">
         <HeaderContent>
             <MudTh>Order</MudTh>
             <MudTh>Description</MudTh>
@@ -41,7 +41,7 @@ else
 
 @code {
     private bool _loading = true;
-    private List<ChecklistQuestion> _questions = new();
+    private List<ChecklistItem> _items = new();
 
     private static string FormatValueType(ChecklistValueType t) => t switch
     {
@@ -59,22 +59,22 @@ else
     {
         _loading = true;
         await using var db = await DbFactory.CreateDbContextAsync();
-        _questions = await db.ChecklistQuestions
-            .OrderBy(q => q.SortOrder)
+        _items = await db.ChecklistItems
+            .OrderBy(i => i.SortOrder)
             .ToListAsync();
         _loading = false;
     }
 
-    private async Task AddQuestionAsync()
+    private async Task AddItemAsync()
     {
-        var dialog = await DialogService.ShowAsync<AddChecklistQuestionDialog>("Add Question");
+        var dialog = await DialogService.ShowAsync<AddChecklistItemDialog>("Add Item");
         var result = await dialog.Result;
         if (result is { Canceled: false }) await LoadAsync();
     }
 
-    private async Task AssignQuestionsAsync()
+    private async Task AssignItemsAsync()
     {
-        var dialog = await DialogService.ShowAsync<AssignQuestionsDialog>("Assign Questions");
+        var dialog = await DialogService.ShowAsync<AssignChecklistItemsDialog>("Assign Items");
         await dialog.Result;
     }
 }

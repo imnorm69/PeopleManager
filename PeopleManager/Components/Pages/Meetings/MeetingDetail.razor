@@ -73,7 +73,7 @@ else
                             <MudSimpleTable Dense="true" Hover="true" Style="overflow:hidden;">
                                 <thead>
                                     <tr>
-                                        <th style="width:55%">Question</th>
+                                        <th style="width:55%">Item</th>
                                         <th style="width:15%;text-align:center;">Frequency</th>
                                         <th style="width:30%">Answer</th>
                                     </tr>
@@ -356,10 +356,10 @@ else
     {
         if (_person is null) return;
 
-        var assignments = await db.PersonQuestionAssignments
-            .Include(a => a.Question)
+        var assignments = await db.PersonItemAssignments
+            .Include(a => a.Item)
             .Where(a => a.PersonId == _person.PersonId)
-            .OrderBy(a => a.Question.SortOrder)
+            .OrderBy(a => a.Item.SortOrder)
             .ToListAsync();
 
         var meetingEvals = _meetingId.HasValue
@@ -370,11 +370,11 @@ else
 
         _checklist = assignments.Select(a =>
         {
-            var eval = meetingEvals.FirstOrDefault(e => e.QuestionId == a.QuestionId);
+            var eval = meetingEvals.FirstOrDefault(e => e.ItemId == a.ItemId);
             return new ChecklistEntry(
-                a.QuestionId,
-                a.Question.Description,
-                a.Question.ValueType,
+                a.ItemId,
+                a.Item.Description,
+                a.Item.ValueType,
                 FormatFrequency(a.Frequency))
             { Answer = eval?.Value };
         }).ToList();
@@ -442,13 +442,13 @@ else
             foreach (var entry in _checklist.Where(e => e.Answer is not null))
             {
                 var eval = await db.ChecklistItemEvaluations
-                    .FirstOrDefaultAsync(e => e.MeetingId == _meetingId && e.QuestionId == entry.QuestionId);
+                    .FirstOrDefaultAsync(e => e.MeetingId == _meetingId && e.ItemId == entry.ItemId);
                 if (eval is null)
                 {
                     db.ChecklistItemEvaluations.Add(new ChecklistItemEvaluation
                     {
                         PersonId = _person!.PersonId,
-                        QuestionId = entry.QuestionId,
+                        ItemId = entry.ItemId,
                         MeetingId = _meetingId,
                         EvaluatedDate = _meetingDate,
                         Value = entry.Answer
@@ -558,9 +558,9 @@ else
         public bool Selected { get; set; }
     }
 
-    private sealed class ChecklistEntry(int questionId, string description, ChecklistValueType valueType, string frequencyLabel)
+    private sealed class ChecklistEntry(int itemId, string description, ChecklistValueType valueType, string frequencyLabel)
     {
-        public int QuestionId { get; } = questionId;
+        public int ItemId { get; } = itemId;
         public string Description { get; } = description;
         public ChecklistValueType ValueType { get; } = valueType;
         public string FrequencyLabel { get; } = frequencyLabel;
