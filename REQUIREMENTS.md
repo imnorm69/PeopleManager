@@ -1,7 +1,7 @@
-﻿# PeopleManager — Requirements
+# PeopleManager — Requirements
 
 ## Overview
-A Windows desktop application (WinForms / .NET 9) for managers to track their direct reports, 1:1 meetings, action items, feedback, and checklist-based reviews. Data is stored locally in a SQLite file (`%LOCALAPPDATA%\PeopleManager\people.db`).
+A Blazor Server web application (.NET 9, MudBlazor) for managers to track their direct reports, 1:1 meetings, action items, feedback, team assignments, shadowing/mentoring quotas, and checklist-based reviews. Hosted via Kestrel (e.g. in a private-LAN LXC container, no reverse proxy required). Data is stored in a SQLite file (`%LOCALAPPDATA%\PeopleManager\people.db` locally, or a path set via the `DatabasePath` config key in deployment).
 
 ---
 
@@ -12,12 +12,18 @@ A Windows desktop application (WinForms / .NET 9) for managers to track their di
 - Add a new person with first name, last name, start date, and initial job title
 - Edit a person's basic info (name, start date)
 - View a person's detail page, including:
-  - Job titles history (title, effective date, current flag)
+  - Job titles history (title, effective date, Previous Department yes/no flag — defaults to No)
   - Team / project assignments (current and history)
   - Employment history (hire date, separation date, reason, notes)
+  - Shadowing history (see below)
 - Separate a person (record separation date, reason, and optional notes)
 - Re-hire a previously separated person (new start date and job title)
 - People are marked active/inactive rather than deleted
+
+### Team / Project Assignments
+- View a person's current and historical team assignments
+- Add a team assignment — free-type a new team name or select an existing one from all distinct teams in the system
+- Click an assignment to edit its team, effective date, or removed date, or delete it
 
 ### 1:1 Meetings
 - List all 1:1 meetings for a person, sorted by date
@@ -25,7 +31,7 @@ A Windows desktop application (WinForms / .NET 9) for managers to track their di
 - Open an existing meeting to view or edit
 - Meeting form includes:
   - Categorised notes tabs: Project Notes, Career Updates, Training Updates, General Notes
-  - Checklist tab — shows assigned questions for the person; answers recorded per meeting
+  - Checklist tab — shows assigned questions for the person; answers recorded per meeting, with a comment field and history view per answer
   - Action items panel — add, complete, delete; filter open/all; @-mention tagging in descriptions
   - Mentions panel — shows open action items from other meetings that tag this person
   - Glows & Grows panel — check off glows and grows linked to this person
@@ -43,10 +49,25 @@ A Windows desktop application (WinForms / .NET 9) for managers to track their di
 - Edit an existing glow/grow
 - Mark a glow/grow as communicated (record the date)
 
-### Checklist Questions
-- Manage a library of checklist questions (description, answer value type: text / yes-no / rating)
-- Assign questions to specific people with a review frequency (daily / weekly / monthly / quarterly / annually)
-- Answers are recorded per person per meeting
+### Checklist Items
+- Manage a library of checklist items (description, answer value type: yes/no, integer, text, percentage, date)
+- Assign items to specific people with a review frequency (weekly / bi-weekly / monthly / quarterly / semi-annual / annual)
+- Answers are recorded per person per meeting, with an optional comment and a history view of past answers
+
+### Shadowing
+- Log shadow sessions on a person's Shadowing tab: date, shadower (must be a person tracked in the system — they earn the quota points), observed person (free text; doesn't have to be someone tracked in the system), team observed, and event type
+- Click a logged session to edit or delete it
+- Shadowing tab lists all sessions newest-first in one flat list, with a Year-Quarter separator inserted above each quarter's sessions
+- Separators only appear for quarters in 2026 or later, during which the person was actually employed (based on hire/separation dates); a qualifying quarter still gets a separator even if zero sessions were logged in it
+- Each separator shows whether the shadowing point requirement was met for that quarter (points earned vs. required)
+- Shadow point requirements are entirely optional, controlled by the global "Enable Shadow Requirements" admin setting — when off, no point values, requirement separators, or point-related fields appear anywhere outside Admin, but session logging itself still works
+- Each person has their own default required points per quarter (editable on their Shadowing tab), seeded from the admin-configured global default when the person is created
+- The first time a shadow session is logged for a person in a quarter with no recorded requirement yet, a dialog prompts to confirm or adjust that quarter's required points before saving
+
+### Admin
+- `/admin` — landing page linking to admin tools (accessible via an Admin link pinned to the bottom of the left nav)
+- **Shadowing Event Types** (`/admin/event-types`) — add, edit, and activate/deactivate the ceremony/event types available when logging shadow sessions, each with a quota point value (0.5 or 1.0)
+- **Shadowing Settings** (`/admin/shadow-settings`) — enable/disable shadow point requirements globally, and set the default per-quarter point requirement (used to seed new people and pre-fill the quarter-requirement confirmation dialog)
 
 ### Dashboard
 - Shows all open action items across all direct reports
