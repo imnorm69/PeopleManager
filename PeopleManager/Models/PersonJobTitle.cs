@@ -23,4 +23,7 @@ public class PersonJobTitle
 
     /// <summary>Gets or sets the date from which this title is effective.</summary>
     public DateTime EffectiveDate { get; set; }
+
+    /// <summary>Gets or sets whether this title was held in a previous department. Defaults to false.</summary>
+    public bool PreviousDepartment { get; set; }
 }

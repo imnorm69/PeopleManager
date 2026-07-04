@@ -13,6 +13,7 @@
             <MudDatePicker @bind-Date="_effectiveDate" Label="Effective Date *"
                            Required="true" RequiredError="Effective date is required."
                            Variant="Variant.Outlined" />
+            <MudCheckBox @bind-Value="_previousDepartment" Label="Previous Department" Color="Color.Primary" />
         </MudForm>
     </DialogContent>
     <DialogActions>
@@ -29,6 +30,7 @@
     private MudForm _form = null!;
     private string _title = "";
     private DateTime? _effectiveDate = DateTime.Today;
+    private bool _previousDepartment;
 
     private void Cancel() => MudDialog.Cancel();
 
@@ -44,7 +46,8 @@
             {
                 PersonId = PersonId,
                 Title = _title.Trim(),
-                EffectiveDate = _effectiveDate ?? DateTime.Today
+                EffectiveDate = _effectiveDate ?? DateTime.Today,
+                PreviousDepartment = _previousDepartment
             });
             await db.SaveChangesAsync();
             MudDialog.Close(DialogResult.Ok(true));
