@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PeopleManager.Data;
 
@@ -10,9 +11,11 @@ using PeopleManager.Data;
 namespace PeopleManager.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260702164049_AddShadowEventTypeTable")]
+    partial class AddShadowEventTypeTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
@@ -63,23 +66,6 @@ namespace PeopleManager.Migrations
                     b.HasIndex("PersonId", "IsComplete");
 
                     b.ToTable("ActionItems");
-                });
-
-            modelBuilder.Entity("PeopleManager.Models.AppSettings", b =>
-                {
-                    b.Property<int>("AppSettingsId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("DefaultShadowPointRequirement")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("ShadowRequirementsEnabled")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("AppSettingsId");
-
-                    b.ToTable("AppSettings");
                 });
 
             modelBuilder.Entity("PeopleManager.Models.ChecklistItem", b =>
@@ -222,6 +208,9 @@ namespace PeopleManager.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("ExcludedFromShadowing")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -233,9 +222,6 @@ namespace PeopleManager.Migrations
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("ShadowPointRequirement")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("StartDate")
@@ -314,9 +300,6 @@ namespace PeopleManager.Migrations
                     b.Property<int>("PersonId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("PreviousDepartment")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -357,32 +340,6 @@ namespace PeopleManager.Migrations
                     b.HasIndex("PersonId", "RemovedDate");
 
                     b.ToTable("PersonProjectAssignments");
-                });
-
-            modelBuilder.Entity("PeopleManager.Models.PersonShadowRequirement", b =>
-                {
-                    b.Property<int>("PersonShadowRequirementId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("PersonId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Quarter")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("RequiredPoints")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("PersonShadowRequirementId");
-
-                    b.HasIndex("PersonId", "Year", "Quarter")
-                        .IsUnique();
-
-                    b.ToTable("PersonShadowRequirements");
                 });
 
             modelBuilder.Entity("PeopleManager.Models.ProjectTeam", b =>
@@ -438,11 +395,10 @@ namespace PeopleManager.Migrations
                     b.Property<int>("EventTypeId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("ObservedName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("ObservedPersonId")
+                        .HasColumnType("INTEGER");
 
-                    b.Property<decimal?>("Points")
+                    b.Property<decimal>("Points")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("ShadowerId")
@@ -455,6 +411,8 @@ namespace PeopleManager.Migrations
                     b.HasKey("ShadowSessionId");
 
                     b.HasIndex("EventTypeId");
+
+                    b.HasIndex("ObservedPersonId");
 
                     b.HasIndex("ShadowerId", "Date");
 
@@ -606,22 +564,17 @@ namespace PeopleManager.Migrations
                     b.Navigation("ProjectTeam");
                 });
 
-            modelBuilder.Entity("PeopleManager.Models.PersonShadowRequirement", b =>
-                {
-                    b.HasOne("PeopleManager.Models.Person", "Person")
-                        .WithMany("ShadowRequirements")
-                        .HasForeignKey("PersonId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Person");
-                });
-
             modelBuilder.Entity("PeopleManager.Models.ShadowSession", b =>
                 {
                     b.HasOne("PeopleManager.Models.ShadowEventType", "EventType")
                         .WithMany("ShadowSessions")
                         .HasForeignKey("EventTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PeopleManager.Models.Person", "ObservedPerson")
+                        .WithMany("ShadowSessionsAsObserved")
+                        .HasForeignKey("ObservedPersonId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -632,6 +585,8 @@ namespace PeopleManager.Migrations
                         .IsRequired();
 
                     b.Navigation("EventType");
+
+                    b.Navigation("ObservedPerson");
 
                     b.Navigation("Shadower");
                 });
@@ -668,7 +623,7 @@ namespace PeopleManager.Migrations
 
                     b.Navigation("ProjectAssignments");
 
-                    b.Navigation("ShadowRequirements");
+                    b.Navigation("ShadowSessionsAsObserved");
 
                     b.Navigation("ShadowSessionsAsShadower");
                 });

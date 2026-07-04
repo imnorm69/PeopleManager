@@ -72,10 +72,12 @@ else
                 <HeaderContent>
                     <MudTh>Title</MudTh>
                     <MudTh>Effective Date</MudTh>
+                    <MudTh>Previous Department</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd Style="@(context == _jobTitles.FirstOrDefault() ? "font-weight:700;" : null)">@context.Title</MudTd>
                     <MudTd Style="@(context == _jobTitles.FirstOrDefault() ? "font-weight:700;" : null)">@context.EffectiveDate.ToShortDateString()</MudTd>
+                    <MudTd>@(context.PreviousDepartment ? "Yes" : "No")</MudTd>
                 </RowTemplate>
             </MudTable>
         </MudTabPanel>
@@ -86,7 +88,9 @@ else
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="AddTeamAsync">Add Team</MudButton>
             </div>
-            <MudTable Items="_teamAssignments" Dense="true" Hover="true" Elevation="0">
+            <MudTable Items="_teamAssignments" Dense="true" Hover="true" Elevation="0"
+                      T="PersonProjectAssignment" OnRowClick="@(args => EditTeamAsync(args.Item!))"
+                      RowClass="cursor-pointer">
                 <HeaderContent>
                     <MudTh>Team</MudTh>
                     <MudTh>Effective</MudTh>
@@ -147,68 +151,71 @@ else
 
         <MudTabPanel Text="Shadowing" Icon="@Icons.Material.Filled.Visibility">
             <div class="d-flex align-center flex-wrap gap-4 mb-4">
-                <MudCheckBox T="bool" Value="_person.ExcludedFromShadowing" ValueChanged="OnExcludedChangedAsync"
-                             Label="Excluded from Shadowing" Color="Color.Primary" Dense="true" />
+                @if (_requirementsEnabled)
+                {
+                    <MudNumericField T="decimal" Value="_person.ShadowPointRequirement" ValueChanged="OnRequirementChangedAsync"
+                                     Label="Required Shadow Pts (per quarter)" Min="0m" Step="0.5m" Format="F1"
+                                     Style="min-width:220px;" Dense="true" Variant="Variant.Outlined" />
+                }
                 <MudSpacer />
-                <MudSelect T="int" Value="_selectedYear" ValueChanged="OnYearChangedAsync" Label="Year"
-                           Style="min-width:110px;" Dense="true" Variant="Variant.Outlined">
-                    @foreach (var y in _availableYears)
-                    {
-                        <MudSelectItem T="int" Value="y">@y</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudSelect T="int" Value="_selectedQuarter" ValueChanged="OnQuarterChangedAsync" Label="Quarter"
-                           Style="min-width:110px;" Dense="true" Variant="Variant.Outlined">
-                    @foreach (var q in _availableQuarters)
-                    {
-                        <MudSelectItem T="int" Value="q">Q@(q)</MudSelectItem>
-                    }
-                </MudSelect>
                 <MudButton Variant="Variant.Filled" Color="Color.Success"
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="AddShadowSessionAsync">Add Shadow Session</MudButton>
             </div>
 
-            @if (!_person.ExcludedFromShadowing)
+            @if (_shadowSessions.Count == 0)
             {
-                <MudPaper Elevation="0" Class="pa-3 mb-4" Style="@QuotaBarStyle">
-                    <MudText Style="font-weight:600;">
-                        @(_quarterShadowerPoints >= 2m ? "Shadowing requirement met" : "Shadowing requirement not met")
-                        — @_quarterShadowerPoints pt@(_quarterShadowerPoints == 1 ? "" : "s") of 2 required
-                        (Q@(_selectedQuarter) @_selectedYear)
-                    </MudText>
-                </MudPaper>
-            }
-
-            @if (_quarterSessions.Count == 0)
-            {
-                <MudText Color="Color.Secondary">No shadow sessions logged for Q@(_selectedQuarter) @_selectedYear.</MudText>
+                <MudText Color="Color.Secondary">No shadow sessions logged.</MudText>
             }
             else
             {
-                <MudTable Items="_quarterSessions" Dense="true" Hover="true" Elevation="0">
-                    <HeaderContent>
-                        <MudTh>Date</MudTh>
-                        <MudTh></MudTh>
-                        <MudTh>Event Type</MudTh>
-                        <MudTh>Team</MudTh>
-                        <MudTh>Points</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>@context.Date.ToShortDateString()</MudTd>
-                        <MudTd>
-                            @(context.ShadowerId == PersonId
-                                ? $"Shadowed {context.ObservedPerson.DisplayName}"
-                                : $"Shadowed by {context.Shadower.DisplayName}")
-                        </MudTd>
-                        <MudTd>@FormatEventType(context.EventType)</MudTd>
-                        <MudTd>@context.TeamObserved</MudTd>
-                        <MudTd>@(context.ShadowerId == PersonId ? context.Points.ToString() : "—")</MudTd>
-                    </RowTemplate>
-                </MudTable>
-                <MudText Typo="Typo.subtitle2" Class="mt-3">
-                    Total Points Earned: @_quarterShadowerPoints
-                </MudText>
+                <MudSimpleTable Dense="true" Hover="true" Style="overflow:hidden;">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Observed</th>
+                            <th>Event Type</th>
+                            <th>Team</th>
+                            @if (_requirementsEnabled)
+                            {
+                                <th>Points</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in _displayRows)
+                        {
+                            @if (row.IsSeparator)
+                            {
+                                <tr style="@RequirementRowStyle(row)">
+                                    <td colspan="@(_requirementsEnabled ? 5 : 4)" style="font-weight:600;">
+                                        Q@(row.Quarter) @row.Year
+                                        @if (_requirementsEnabled)
+                                        {
+                                            <span>
+                                                — @(row.Met ? "requirement met" : "requirement not met")
+                                                (@row.Earned pt@(row.Earned == 1 ? "" : "s") of @row.Required required)
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                <tr class="cursor-pointer" @onclick="@(() => EditShadowSessionAsync(row.Session!))">
+                                    <td>@row.Session!.Date.ToShortDateString()</td>
+                                    <td>@row.Session.ObservedName</td>
+                                    <td>@row.Session.EventType.Name</td>
+                                    <td>@row.Session.TeamObserved</td>
+                                    @if (_requirementsEnabled)
+                                    {
+                                        <td>@(row.Session.Points?.ToString() ?? "—")</td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </MudSimpleTable>
             }
         </MudTabPanel>
     </MudTabs>
@@ -225,16 +232,16 @@ else
     private List<Meeting> _meetings = new();
     private List<ChecklistItemEvaluation> _checklistHistory = new();
     private List<ShadowSession> _shadowSessions = new();
-    private List<int> _availableYears = new();
-    private List<int> _availableQuarters = new();
-    private List<ShadowSession> _quarterSessions = new();
-    private decimal _quarterShadowerPoints;
-    private int _selectedYear;
-    private int _selectedQuarter;
+    private List<PersonShadowRequirement> _shadowRequirements = new();
+    private List<ShadowDisplayRow> _displayRows = new();
+    private bool _requirementsEnabled = true;
 
-    private string QuotaBarStyle => _quarterShadowerPoints >= 2m
-        ? "background:#eafaf1;border-left:6px solid #27ae60;"
-        : "background:#fdedec;border-left:6px solid #c0392b;";
+    private sealed record ShadowDisplayRow(
+        bool IsSeparator, ShadowSession? Session, int Year, int Quarter, decimal Earned, decimal Required, bool Met);
+
+    private static string RequirementRowStyle(ShadowDisplayRow row) => row.Met
+        ? "background:#eafaf1;"
+        : "background:#fdedec;";
 
     private string CurrentTitle =>
         _jobTitles.OrderByDescending(t => t.EffectiveDate).FirstOrDefault()?.Title ?? "—";
@@ -277,76 +284,100 @@ else
 
         _shadowSessions = await db.ShadowSessions
             .Include(s => s.Shadower)
-            .Include(s => s.ObservedPerson)
-            .Where(s => s.ShadowerId == PersonId || s.ObservedPersonId == PersonId)
+            .Include(s => s.EventType)
+            .Where(s => s.ShadowerId == PersonId)
             .OrderByDescending(s => s.Date)
             .ToListAsync();
 
-        _availableYears = new[] { DateTime.Today.Year }
-            .Concat(_shadowSessions.Select(s => s.Date.Year))
-            .Distinct()
-            .OrderByDescending(y => y)
-            .ToList();
+        _shadowRequirements = await db.PersonShadowRequirements
+            .Where(r => r.PersonId == PersonId)
+            .ToListAsync();
 
-        if (_selectedYear == 0)
-        {
-            _selectedYear = DateTime.Today.Year;
-            _selectedQuarter = CurrentQuarter(DateTime.Today);
-        }
+        var settings = await db.AppSettings.FirstOrDefaultAsync();
+        _requirementsEnabled = settings?.ShadowRequirementsEnabled ?? true;
 
-        RecomputeQuarterView();
+        RecomputeDisplayRows();
 
         _loading = false;
     }
 
-    private static int CurrentQuarter(DateTime d) => (d.Month - 1) / 3 + 1;
+    private static int QuarterOf(DateTime d) => (d.Month - 1) / 3 + 1;
 
-    private static int MaxQuarterForYear(int year) =>
-        year < DateTime.Today.Year ? 4 : CurrentQuarter(DateTime.Today);
-
-    private void RecomputeQuarterView()
+    /// <summary>
+    /// A quarter only gets a requirement separator if it's 2026 or later and the person
+    /// was actually employed for at least part of it (covers gaps from separation/re-hire).
+    /// </summary>
+    private bool QuarterQualifies(int year, int quarter)
     {
-        var maxQuarter = MaxQuarterForYear(_selectedYear);
-        _availableQuarters = Enumerable.Range(1, maxQuarter).ToList();
-        _selectedQuarter = Math.Clamp(_selectedQuarter, 1, maxQuarter);
+        if (year < 2026) return false;
 
-        var quarterStart = new DateTime(_selectedYear, (_selectedQuarter - 1) * 3 + 1, 1);
+        var quarterStart = new DateTime(year, (quarter - 1) * 3 + 1, 1);
         var quarterEnd = quarterStart.AddMonths(3);
 
-        _quarterSessions = _shadowSessions
-            .Where(s => s.Date >= quarterStart && s.Date < quarterEnd)
-            .OrderByDescending(s => s.Date)
-            .ToList();
-
-        _quarterShadowerPoints = _quarterSessions
-            .Where(s => s.ShadowerId == PersonId)
-            .Sum(s => s.Points);
+        return _periods.Any(p =>
+            p.HireDate < quarterEnd && (!p.SeparationDate.HasValue || p.SeparationDate.Value >= quarterStart));
     }
 
-    private void OnYearChangedAsync(int year)
+    private void RecomputeDisplayRows()
     {
-        _selectedYear = year;
-        RecomputeQuarterView();
-    }
-
-    private void OnQuarterChangedAsync(int quarter)
-    {
-        _selectedQuarter = quarter;
-        RecomputeQuarterView();
-    }
-
-    private async Task OnExcludedChangedAsync(bool value)
-    {
+        _displayRows = new List<ShadowDisplayRow>();
         if (_person is null) return;
-        _person.ExcludedFromShadowing = value;
+
+        var sessionsByQuarter = _shadowSessions
+            .GroupBy(s => (Year: s.Date.Year, Quarter: QuarterOf(s.Date)))
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(s => s.Date).ToList());
+
+        // Every quarter that has a session gets grouped; qualifying quarters (2026+,
+        // during employment) also get a separator even with zero sessions logged, so a
+        // quiet quarter still shows as outstanding rather than silently disappearing.
+        var allKeys = new HashSet<(int Year, int Quarter)>(sessionsByQuarter.Keys);
+        if (_requirementsEnabled)
+        {
+            var currentYear = DateTime.Today.Year;
+            for (var year = 2026; year <= currentYear; year++)
+            {
+                var maxQuarter = year < currentYear ? 4 : QuarterOf(DateTime.Today);
+                for (var quarter = 1; quarter <= maxQuarter; quarter++)
+                {
+                    if (QuarterQualifies(year, quarter)) allKeys.Add((year, quarter));
+                }
+            }
+        }
+
+        foreach (var key in allKeys.OrderByDescending(k => k.Year).ThenByDescending(k => k.Quarter))
+        {
+            var sessionsInGroup = sessionsByQuarter.TryGetValue(key, out var list) ? list : new List<ShadowSession>();
+
+            if (_requirementsEnabled && QuarterQualifies(key.Year, key.Quarter))
+            {
+                var earned = sessionsInGroup.Sum(s => s.Points ?? 0m);
+                var required = _shadowRequirements
+                    .FirstOrDefault(r => r.Year == key.Year && r.Quarter == key.Quarter)?.RequiredPoints
+                    ?? _person.ShadowPointRequirement;
+
+                _displayRows.Add(new ShadowDisplayRow(true, null, key.Year, key.Quarter, earned, required, earned >= required));
+            }
+
+            foreach (var session in sessionsInGroup)
+            {
+                _displayRows.Add(new ShadowDisplayRow(false, session, key.Year, key.Quarter, 0m, 0m, false));
+            }
+        }
+    }
+
+    private async Task OnRequirementChangedAsync(decimal value)
+    {
+        if (_person is null || value < 0) return;
+        _person.ShadowPointRequirement = value;
 
         await using var db = await DbFactory.CreateDbContextAsync();
         var p = await db.People.FindAsync(PersonId);
         if (p is not null)
         {
-            p.ExcludedFromShadowing = value;
+            p.ShadowPointRequirement = value;
             await db.SaveChangesAsync();
-            Snackbar.Add(value ? "Marked as excluded from shadowing." : "Marked as required to shadow.", Severity.Success);
+            RecomputeDisplayRows();
+            Snackbar.Add("Shadow point requirement updated.", Severity.Success);
         }
     }
 
@@ -357,12 +388,6 @@ else
         SeparationReason.Termination => "Termination",
         SeparationReason.Other => "Other",
         _ => "—"
-    };
-
-    private static string FormatEventType(ShadowEventType t) => t switch
-    {
-        ShadowEventType.DailyStandup => "Daily Standup",
-        _ => t.ToString()
     };
 
     private async Task EditPersonAsync()
@@ -385,6 +410,14 @@ else
     {
         var p = new DialogParameters<AddTeamAssignmentDialog> { { x => x.PersonId, PersonId } };
         var dialog = await DialogService.ShowAsync<AddTeamAssignmentDialog>("Add Team Assignment", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+
+    private async Task EditTeamAsync(PersonProjectAssignment assignment)
+    {
+        var p = new DialogParameters<EditTeamAssignmentDialog> { { x => x.AssignmentId, assignment.AssignmentId } };
+        var dialog = await DialogService.ShowAsync<EditTeamAssignmentDialog>("Edit Team Assignment", p);
         var result = await dialog.Result;
         if (result is { Canceled: false }) await LoadAsync();
     }
@@ -423,6 +456,14 @@ else
     {
         var p = new DialogParameters<AddShadowSessionDialog> { { x => x.PersonId, PersonId } };
         var dialog = await DialogService.ShowAsync<AddShadowSessionDialog>("Add Shadow Session", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+
+    private async Task EditShadowSessionAsync(ShadowSession session)
+    {
+        var p = new DialogParameters<EditShadowSessionDialog> { { x => x.ShadowSessionId, session.ShadowSessionId } };
+        var dialog = await DialogService.ShowAsync<EditShadowSessionDialog>("Edit Shadow Session", p);
         var result = await dialog.Result;
         if (result is { Canceled: false }) await LoadAsync();
     }

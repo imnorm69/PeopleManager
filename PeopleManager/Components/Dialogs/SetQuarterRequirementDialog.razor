@@ -1,0 +1,44 @@
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Shadow Point Requirement</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Class="mb-4">
+            No shadow point requirement has been set for <b>@PersonName</b> for Q@(Quarter) @Year yet.
+            Confirm or adjust the required points for this quarter.
+        </MudText>
+        <MudForm @ref="_form">
+            <MudNumericField @bind-Value="_requiredPoints" Label="Required Points *"
+                              Min="0m" Step="0.5m" Format="F1"
+                              Required="true" RequiredError="A required points value is required."
+                              Variant="Variant.Outlined" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="OkAsync">OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public string PersonName { get; set; } = "";
+    [Parameter] public int Year { get; set; }
+    [Parameter] public int Quarter { get; set; }
+    [Parameter] public decimal DefaultPoints { get; set; }
+
+    private MudForm _form = null!;
+    private decimal _requiredPoints;
+
+    protected override void OnInitialized() => _requiredPoints = DefaultPoints;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task OkAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid || _requiredPoints < 0) return;
+        MudDialog.Close(DialogResult.Ok(_requiredPoints));
+    }
+}

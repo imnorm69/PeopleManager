@@ -1,0 +1,63 @@
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Event Type</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
+            <MudTextField @bind-Value="_name" Label="Name *"
+                          Required="true" RequiredError="Name is required."
+                          Variant="Variant.Outlined" />
+            <MudSelect T="decimal" @bind-Value="_points" Label="Points *" Variant="Variant.Outlined">
+                <MudSelectItem T="decimal" Value="0.5m">0.5</MudSelectItem>
+                <MudSelectItem T="decimal" Value="1m">1.0</MudSelectItem>
+            </MudSelect>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="SubmitAsync">Add</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private MudForm _form = null!;
+    private string _name = "";
+    private decimal _points = 1m;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var name = _name.Trim();
+            if (await db.ShadowEventTypes.AnyAsync(t => t.Name == name))
+            {
+                Snackbar.Add("An event type with this name already exists.", Severity.Warning);
+                return;
+            }
+
+            db.ShadowEventTypes.Add(new ShadowEventType
+            {
+                Name = name,
+                Points = _points,
+                IsActive = true
+            });
+            await db.SaveChangesAsync();
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

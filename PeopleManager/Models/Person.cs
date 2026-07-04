@@ -27,8 +27,8 @@ public class Person
     /// <summary>Gets or sets whether the employee is currently active (not separated).</summary>
     public bool IsActive { get; set; } = true;
 
-    /// <summary>Gets or sets whether this person is exempt from the shadowing quota requirement.</summary>
-    public bool ExcludedFromShadowing { get; set; }
+    /// <summary>Gets or sets the shadow points this person is required to accumulate per quarter by default.</summary>
+    public decimal ShadowPointRequirement { get; set; }
 
     /// <summary>Gets the full name in "First Last" format.</summary>
     public string FullName => $"{FirstName} {LastName}";
@@ -63,6 +63,6 @@ public class Person
     /// <summary>Gets all shadow sessions where this person did the observing.</summary>
     public ICollection<ShadowSession> ShadowSessionsAsShadower { get; set; } = new List<ShadowSession>();
 
-    /// <summary>Gets all shadow sessions where this person was observed.</summary>
-    public ICollection<ShadowSession> ShadowSessionsAsObserved { get; set; } = new List<ShadowSession>();
+    /// <summary>Gets all per-quarter shadow point requirements recorded for this person.</summary>
+    public ICollection<PersonShadowRequirement> ShadowRequirements { get; set; } = new List<PersonShadowRequirement>();
 }

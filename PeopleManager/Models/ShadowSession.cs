@@ -18,18 +18,18 @@ public class ShadowSession
     /// <summary>Gets or sets the shadower navigation property.</summary>
     public Person Shadower { get; set; } = null!;
 
-    /// <summary>Gets or sets the person who was observed facilitating.</summary>
-    public int ObservedPersonId { get; set; }
-
-    /// <summary>Gets or sets the observed person navigation property.</summary>
-    public Person ObservedPerson { get; set; } = null!;
+    /// <summary>Gets or sets the name of the person who was observed facilitating, as typed in.</summary>
+    public string ObservedName { get; set; } = "";
 
     /// <summary>Gets or sets the free-text name of the team that was observed.</summary>
     public string TeamObserved { get; set; } = "";
 
-    /// <summary>Gets or sets the type of event observed.</summary>
-    public ShadowEventType EventType { get; set; }
+    /// <summary>Gets or sets the event type observed.</summary>
+    public int EventTypeId { get; set; }
 
-    /// <summary>Gets or sets the quota points earned (0.5 or 1).</summary>
-    public decimal Points { get; set; }
+    /// <summary>Gets or sets the event type navigation property.</summary>
+    public ShadowEventType EventType { get; set; } = null!;
+
+    /// <summary>Gets or sets the quota points earned (0.5 or 1), or null if shadow requirements were disabled when logged.</summary>
+    public decimal? Points { get; set; }
 }

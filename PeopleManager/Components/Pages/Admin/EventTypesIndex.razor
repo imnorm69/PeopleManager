@@ -1,0 +1,79 @@
+@page "/admin/event-types"
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IDialogService DialogService
+
+<PageTitle>Shadowing Event Types — People Manager</PageTitle>
+
+<div class="d-flex align-center gap-3 mb-4">
+    <MudText Typo="Typo.h5">Shadowing Event Types</MudText>
+    <MudSpacer />
+    <MudCheckBox @bind-Value="_showInactive" Label="Show Inactive" Color="Color.Primary" Dense="true" />
+    <MudButton Variant="Variant.Filled" Color="Color.Success"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="AddEventTypeAsync">
+        Add Event Type
+    </MudButton>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="@FilteredEventTypes" Hover="true" Dense="false" Elevation="2"
+              T="ShadowEventType" OnRowClick="@(args => EditEventTypeAsync(args.Item!))"
+              RowClass="cursor-pointer">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Points</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Points">@context.Points</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Default)"
+                         Size="Size.Small" Variant="Variant.Filled" Label="true">
+                    @(context.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _showInactive;
+    private List<ShadowEventType> _eventTypes = new();
+
+    private IEnumerable<ShadowEventType> FilteredEventTypes =>
+        _showInactive ? _eventTypes : _eventTypes.Where(t => t.IsActive);
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _eventTypes = await db.ShadowEventTypes
+            .OrderBy(t => t.Name)
+            .ToListAsync();
+        _loading = false;
+    }
+
+    private async Task AddEventTypeAsync()
+    {
+        var dialog = await DialogService.ShowAsync<AddEventTypeDialog>("Add Event Type");
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+
+    private async Task EditEventTypeAsync(ShadowEventType eventType)
+    {
+        var p = new DialogParameters<EventTypeDetailDialog> { { x => x.ShadowEventTypeId, eventType.ShadowEventTypeId } };
+        var dialog = await DialogService.ShowAsync<EventTypeDetailDialog>("Edit Event Type", p);
+        var result = await dialog.Result;
+        if (result is { Canceled: false }) await LoadAsync();
+    }
+}

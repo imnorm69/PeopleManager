@@ -1,0 +1,39 @@
+@page "/admin"
+@inject NavigationManager Nav
+
+<PageTitle>Admin — People Manager</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-4">Admin</MudText>
+
+<MudGrid>
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2" Class="cursor-pointer" @onclick="@(() => Nav.NavigateTo("/admin/event-types"))">
+            <MudCardContent>
+                <div class="d-flex align-center gap-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Large" />
+                    <div>
+                        <MudText Typo="Typo.h6">Shadowing Event Types</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Manage the ceremony/event types available when logging shadow sessions, and their quota point values.
+                        </MudText>
+                    </div>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard Elevation="2" Class="cursor-pointer" @onclick="@(() => Nav.NavigateTo("/admin/shadow-settings"))">
+            <MudCardContent>
+                <div class="d-flex align-center gap-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" Size="Size.Large" />
+                    <div>
+                        <MudText Typo="Typo.h6">Shadowing Settings</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Turn shadow point requirements on or off, and set the default quarterly point requirement.
+                        </MudText>
+                    </div>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PeopleManager.Data;
 
@@ -10,9 +11,11 @@ using PeopleManager.Data;
 namespace PeopleManager.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260702174330_AddShadowRequirements")]
+    partial class AddShadowRequirements
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
@@ -314,9 +317,6 @@ namespace PeopleManager.Migrations
                     b.Property<int>("PersonId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("PreviousDepartment")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -442,6 +442,9 @@ namespace PeopleManager.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("ObservedPersonId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<decimal?>("Points")
                         .HasColumnType("TEXT");
 
@@ -455,6 +458,8 @@ namespace PeopleManager.Migrations
                     b.HasKey("ShadowSessionId");
 
                     b.HasIndex("EventTypeId");
+
+                    b.HasIndex("ObservedPersonId");
 
                     b.HasIndex("ShadowerId", "Date");
 
@@ -625,6 +630,11 @@ namespace PeopleManager.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("PeopleManager.Models.Person", "ObservedPerson")
+                        .WithMany("ShadowSessionsAsObserved")
+                        .HasForeignKey("ObservedPersonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("PeopleManager.Models.Person", "Shadower")
                         .WithMany("ShadowSessionsAsShadower")
                         .HasForeignKey("ShadowerId")
@@ -632,6 +642,8 @@ namespace PeopleManager.Migrations
                         .IsRequired();
 
                     b.Navigation("EventType");
+
+                    b.Navigation("ObservedPerson");
 
                     b.Navigation("Shadower");
                 });
@@ -669,6 +681,8 @@ namespace PeopleManager.Migrations
                     b.Navigation("ProjectAssignments");
 
                     b.Navigation("ShadowRequirements");
+
+                    b.Navigation("ShadowSessionsAsObserved");
 
                     b.Navigation("ShadowSessionsAsShadower");
                 });

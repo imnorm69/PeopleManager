@@ -4,51 +4,63 @@
 
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h6">Add Shadow Session</MudText>
+        <MudText Typo="Typo.h6">Edit Shadow Session</MudText>
     </TitleContent>
     <DialogContent>
-        <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
-            <MudDatePicker @bind-Date="_date" Label="Date *"
-                           Required="true" RequiredError="Date is required."
-                           Variant="Variant.Outlined" />
-            <MudTextField @bind-Value="_shadowerName" Label="Shadower (who observed) *"
-                          Required="true" RequiredError="Shadower is required."
-                          Variant="Variant.Outlined" />
-            <MudTextField @bind-Value="_observedName" Label="Observed (who was shadowed) *"
-                          Required="true" RequiredError="Observed person is required."
-                          Variant="Variant.Outlined" />
-            <MudTextField @bind-Value="_teamObserved" Label="Team Observed *"
-                          Required="true" RequiredError="Team observed is required."
-                          Variant="Variant.Outlined" />
-            <MudSelect T="int" @bind-Value="_eventTypeId" Label="Event Type *"
-                       Required="true" RequiredError="Event type is required."
-                       Variant="Variant.Outlined">
-                @foreach (var t in _eventTypes)
+        @if (_loading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else
+        {
+            <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
+                <MudDatePicker @bind-Date="_date" Label="Date *"
+                               Required="true" RequiredError="Date is required."
+                               Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="_shadowerName" Label="Shadower (who observed) *"
+                              Required="true" RequiredError="Shadower is required."
+                              Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="_observedName" Label="Observed (who was shadowed) *"
+                              Required="true" RequiredError="Observed person is required."
+                              Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="_teamObserved" Label="Team Observed *"
+                              Required="true" RequiredError="Team observed is required."
+                              Variant="Variant.Outlined" />
+                <MudSelect T="int" @bind-Value="_eventTypeId" Label="Event Type *"
+                           Required="true" RequiredError="Event type is required."
+                           Variant="Variant.Outlined">
+                    @foreach (var t in _eventTypes)
+                    {
+                        <MudSelectItem T="int" Value="t.ShadowEventTypeId">@t.Name</MudSelectItem>
+                    }
+                </MudSelect>
+                @if (_requirementsEnabled && SelectedEventType is not null)
                 {
-                    <MudSelectItem T="int" Value="t.ShadowEventTypeId">@t.Name</MudSelectItem>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Points: @SelectedEventType.Points
+                    </MudText>
                 }
-            </MudSelect>
-            @if (_requirementsEnabled && SelectedEventType is not null)
-            {
-                <MudText Typo="Typo.caption" Color="Color.Secondary">
-                    Points: @SelectedEventType.Points
-                </MudText>
-            }
-        </MudForm>
+            </MudForm>
+        }
     </DialogContent>
     <DialogActions>
+        <MudButton Color="Color.Error" Variant="Variant.Text" OnClick="DeleteAsync" Disabled="_loading">Delete</MudButton>
+        <MudSpacer />
         <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
-        <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="SubmitAsync">Add</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync" Disabled="_loading">
+            Save
+        </MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter] public int PersonId { get; set; }
+    [Parameter] public int ShadowSessionId { get; set; }
 
     private MudForm _form = null!;
-    private DateTime? _date = DateTime.Today;
+    private bool _loading = true;
+    private DateTime? _date;
     private string _shadowerName = "";
     private string _observedName = "";
     private string _teamObserved = "";
@@ -63,21 +75,35 @@
     protected override async Task OnInitializedAsync()
     {
         await using var db = await DbFactory.CreateDbContextAsync();
+
+        var session = await db.ShadowSessions
+            .Include(s => s.Shadower)
+            .FirstOrDefaultAsync(s => s.ShadowSessionId == ShadowSessionId);
+
+        // Load everyone (not just active) so a shadower who has since separated still resolves.
         _people = await db.People
-            .Where(p => p.IsActive)
             .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
             .ToListAsync();
-        var currentPerson = PersonId > 0 ? _people.FirstOrDefault(p => p.PersonId == PersonId) : null;
-        _shadowerName = currentPerson?.DisplayName ?? "";
 
+        // Include the session's current event type even if it's since been deactivated.
         _eventTypes = await db.ShadowEventTypes
-            .Where(t => t.IsActive)
+            .Where(t => t.IsActive || t.ShadowEventTypeId == (session != null ? session.EventTypeId : 0))
             .OrderBy(t => t.Name)
             .ToListAsync();
-        _eventTypeId = _eventTypes.FirstOrDefault()?.ShadowEventTypeId ?? 0;
 
         var settings = await db.AppSettings.FirstOrDefaultAsync();
         _requirementsEnabled = settings?.ShadowRequirementsEnabled ?? true;
+
+        if (session is not null)
+        {
+            _date = session.Date;
+            _shadowerName = session.Shadower.DisplayName;
+            _observedName = session.ObservedName;
+            _teamObserved = session.TeamObserved;
+            _eventTypeId = session.EventTypeId;
+        }
+
+        _loading = false;
     }
 
     private static int QuarterOf(DateTime d) => (d.Month - 1) / 3 + 1;
@@ -116,8 +142,6 @@
             return;
         }
 
-        // The observed person doesn't have to be someone tracked in the system (e.g. someone
-        // from another team) — it's stored as free text, not linked to a Person record.
         var observedName = _observedName.Trim();
 
         if (string.Equals(observedName, shadower.DisplayName, StringComparison.OrdinalIgnoreCase) ||
@@ -163,17 +187,34 @@
                 }
             }
 
-            db.ShadowSessions.Add(new ShadowSession
-            {
-                Date = date,
-                ShadowerId = shadower.PersonId,
-                ObservedName = observedName,
-                TeamObserved = _teamObserved.Trim(),
-                EventTypeId = SelectedEventType.ShadowEventTypeId,
-                Points = _requirementsEnabled ? SelectedEventType.Points : null
-            });
+            var session = await db.ShadowSessions.FindAsync(ShadowSessionId);
+            if (session is null) return;
+
+            session.Date = date;
+            session.ShadowerId = shadower.PersonId;
+            session.ObservedName = observedName;
+            session.TeamObserved = _teamObserved.Trim();
+            session.EventTypeId = SelectedEventType.ShadowEventTypeId;
+            session.Points = _requirementsEnabled ? SelectedEventType.Points : null;
+
             await db.SaveChangesAsync();
             MudDialog.Close(DialogResult.Ok(date));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var session = await db.ShadowSessions.FindAsync(ShadowSessionId);
+            if (session is not null) db.ShadowSessions.Remove(session);
+            await db.SaveChangesAsync();
+            MudDialog.Close(DialogResult.Ok(true));
         }
         catch (Exception ex)
         {

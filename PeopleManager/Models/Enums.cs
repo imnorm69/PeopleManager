@@ -53,14 +53,3 @@ public enum SeparationReason
     Termination,
     Other
 }
-
-/// <summary>The type of event observed during a shadow session.</summary>
-public enum ShadowEventType
-{
-    Planning,
-    Refinement,
-    Review,
-    Retro,
-    DailyStandup,
-    Other
-}

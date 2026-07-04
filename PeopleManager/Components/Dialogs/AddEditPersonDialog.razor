@@ -74,12 +74,14 @@
             await using var db = await DbFactory.CreateDbContextAsync();
             if (PersonId == 0)
             {
+                var settings = await db.AppSettings.FirstOrDefaultAsync();
                 var person = new Person
                 {
                     FirstName = _firstName.Trim(),
                     LastName = _lastName.Trim(),
                     StartDate = _startDate ?? DateTime.Today,
-                    IsActive = true
+                    IsActive = true,
+                    ShadowPointRequirement = settings?.DefaultShadowPointRequirement ?? 2m
                 };
                 db.People.Add(person);
                 await db.SaveChangesAsync();

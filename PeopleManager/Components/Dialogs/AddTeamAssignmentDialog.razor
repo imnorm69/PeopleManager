@@ -9,6 +9,7 @@
         <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
             <MudAutocomplete T="string" Label="Team *" @bind-Value="_teamName"
                              SearchFunc="SearchTeams" Required="true" RequiredError="Team is required."
+                             CoerceValue="true"
                              Variant="Variant.Outlined"
                              Placeholder="Select existing or type new team name" />
             <MudDatePicker @bind-Date="_effectiveDate" Label="Effective Date *"

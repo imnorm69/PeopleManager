@@ -1,0 +1,101 @@
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Edit Event Type</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_loading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else
+        {
+            <MudForm @ref="_form" Class="d-flex flex-column gap-4 mt-2">
+                <MudTextField @bind-Value="_name" Label="Name *"
+                              Required="true" RequiredError="Name is required."
+                              Variant="Variant.Outlined" />
+                <MudSelect T="decimal" @bind-Value="_points" Label="Points *" Variant="Variant.Outlined">
+                    <MudSelectItem T="decimal" Value="0.5m">0.5</MudSelectItem>
+                    <MudSelectItem T="decimal" Value="1m">1.0</MudSelectItem>
+                </MudSelect>
+                <MudCheckBox @bind-Value="_isActive" Label="Active" Color="Color.Primary" />
+                @if (_inUseCount > 0)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true">
+                        Used by @_inUseCount shadow session@(_inUseCount == 1 ? "" : "s"). Existing sessions keep their
+                        recorded points even if you change the value above; deactivate instead of renaming if you just
+                        want to retire this type.
+                    </MudAlert>
+                }
+            </MudForm>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync" Disabled="_loading">
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int ShadowEventTypeId { get; set; }
+
+    private MudForm _form = null!;
+    private bool _loading = true;
+    private string _name = "";
+    private decimal _points = 1m;
+    private bool _isActive = true;
+    private int _inUseCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var eventType = await db.ShadowEventTypes.FindAsync(ShadowEventTypeId);
+        if (eventType is not null)
+        {
+            _name = eventType.Name;
+            _points = eventType.Points;
+            _isActive = eventType.IsActive;
+        }
+        _inUseCount = await db.ShadowSessions.CountAsync(s => s.EventTypeId == ShadowEventTypeId);
+        _loading = false;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var name = _name.Trim();
+            if (await db.ShadowEventTypes.AnyAsync(t => t.Name == name && t.ShadowEventTypeId != ShadowEventTypeId))
+            {
+                Snackbar.Add("An event type with this name already exists.", Severity.Warning);
+                return;
+            }
+
+            var eventType = await db.ShadowEventTypes.FindAsync(ShadowEventTypeId);
+            if (eventType is not null)
+            {
+                eventType.Name = name;
+                eventType.Points = _points;
+                eventType.IsActive = _isActive;
+                await db.SaveChangesAsync();
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

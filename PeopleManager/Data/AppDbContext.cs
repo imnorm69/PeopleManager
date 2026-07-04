@@ -35,6 +35,12 @@ public class AppDbContext : DbContext
     public DbSet<ChecklistItemEvaluation>  ChecklistItemEvaluations  { get; set; }
     /// <summary>Gets or sets the ShadowSessions table.</summary>
     public DbSet<ShadowSession>            ShadowSessions            { get; set; }
+    /// <summary>Gets or sets the ShadowEventTypes table.</summary>
+    public DbSet<ShadowEventType>          ShadowEventTypes          { get; set; }
+    /// <summary>Gets or sets the PersonShadowRequirements table.</summary>
+    public DbSet<PersonShadowRequirement>  PersonShadowRequirements  { get; set; }
+    /// <summary>Gets or sets the singleton AppSettings row.</summary>
+    public DbSet<AppSettings>              AppSettings               { get; set; }
 
     /// <summary>Initialises a new context instance with the given options.</summary>
     /// <param name="options">EF Core options including the connection string.</param>
@@ -137,9 +143,16 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ShadowSession>()
-            .HasOne(s => s.ObservedPerson)
-            .WithMany(p => p.ShadowSessionsAsObserved)
-            .HasForeignKey(s => s.ObservedPersonId)
+            .HasOne(s => s.EventType)
+            .WithMany(t => t.ShadowSessions)
+            .HasForeignKey(s => s.EventTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ── PersonShadowRequirement → Person ─────────────────────────────────────
+        modelBuilder.Entity<PersonShadowRequirement>()
+            .HasOne(r => r.Person)
+            .WithMany(p => p.ShadowRequirements)
+            .HasForeignKey(r => r.PersonId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // ── Indexes ──────────────────────────────────────────────────────────────
@@ -158,5 +171,11 @@ public class AppDbContext : DbContext
             .IsUnique();   // a person can only be assigned a given item once
         modelBuilder.Entity<ShadowSession>()
             .HasIndex(s => new { s.ShadowerId, s.Date });   // quota lookups per shadower per quarter
+        modelBuilder.Entity<ShadowEventType>()
+            .HasIndex(t => t.Name)
+            .IsUnique();
+        modelBuilder.Entity<PersonShadowRequirement>()
+            .HasIndex(r => new { r.PersonId, r.Year, r.Quarter })
+            .IsUnique();
     }
 }
