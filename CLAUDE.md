@@ -1,7 +1,7 @@
 # Project: PeopleManager
 
 ## Project Type
-Blazor Server (branch `blazor`); WinForms legacy on `main`
+Blazor Server (branch `main`); legacy WinForms preserved on `winforms-legacy`
 
 ## Target Framework
 net9.0

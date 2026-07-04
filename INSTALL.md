@@ -32,23 +32,15 @@ If you skip this, just prefix every `docker` command below with `sudo`.
 
 ## 2. Clone the repository
 
-The `blazor` branch is the Blazor Server app. **Clone it directly with `-b blazor`**
-— the repo's default branch is `main`, which is a legacy WinForms version with
-none of the Docker files, so a plain `git clone` (or `git clone` without
-`-b`) leaves you on the wrong branch.
-
 ```bash
 cd /opt
-sudo git clone -b blazor https://github.com/imnorm69/PeopleManager.git
+sudo git clone https://github.com/imnorm69/PeopleManager.git
 cd PeopleManager
 ```
 
-If you already cloned without `-b blazor`, switch branches instead of
-re-cloning:
-
-```bash
-git checkout blazor
-```
+`main` is the Blazor Server app and is now the repo's default branch, so
+a plain clone gets you the right code. (The old WinForms version is
+preserved on the `winforms-legacy` branch, if you ever need it.)
 
 (Adjust ownership of `/opt/PeopleManager` to your user if you didn't add
 yourself to the `docker` group and don't want to run everything as root —
@@ -89,7 +81,7 @@ sudo ufw allow 8080/tcp
 
 ## 4. Updating to a new version
 
-Whenever you push changes to the `blazor` branch, redeploy with:
+Whenever you push changes to `main`, redeploy with:
 
 ```bash
 cd /opt/PeopleManager
